@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import { MapContainer, GeoJSON } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [geo, setGeo] = useState(null);
+  const [selectedName, setSelectedName] = useState(null);
+
+  useEffect(() => {
+    fetch("/wojewodztwa.geojson")
+      .then((res) => res.json())
+      .then((data) => setGeo(data))
+      .catch((e) => console.error("fetch error:", e));
+  }, []);
+
+  const defaultStyle = {
+    fillColor: "#357edd",
+    weight: 1,
+    color: "white",
+    fillOpacity: 0.6,
+  };
+
+  const highlightStyle = {
+    fillColor: "#ff7f0e",
+    weight: 2,
+    color: "white",
+    fillOpacity: 0.8,
+  };
+
+  const styleFeature = (feature) => {
+    const name = feature.properties.nazwa;
+    return name === selectedName ? highlightStyle : defaultStyle;
+  };
+
+  const onEachFeature = (feature, layer) => {
+    const name = feature.properties.nazwa;
+
+    layer.on({
+      click: () => {
+        setSelectedName(name);
+      },
+    });
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ height: "100vh", background: "#ffffff" }}>
+      <MapContainer
+        center={[52, 19]}
+        zoom={6}
+        style={{ height: "100%", width: "100%" }}
+      >
+        {geo && (
+          <GeoJSON
+            data={geo}
+            style={styleFeature}
+            onEachFeature={onEachFeature}
+          />
+        )}
+      </MapContainer>
+    </div>
+  );
 }
-
-export default App
