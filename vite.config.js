@@ -11,9 +11,10 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Sentiment Map",
-        short_name: "SentimentMap",
-        start_url: ".",
+        name: "SentiNews",
+        short_name: "SentiNews",
+        scope: "/",
+        start_url: "/",
         display: "standalone",
         background_color: "#ffffff",
         icons: [

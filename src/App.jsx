@@ -43,20 +43,39 @@ export default function App() {
   };
 
   return (
-    <div style={{ height: "100vh", background: "#ffffff" }}>
-      <MapContainer
-        center={[52, 19]}
-        zoom={6}
-        style={{ height: "100%", width: "100%" }}
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: "1 1 auto" }}>
+        <MapContainer
+          center={[52, 19]}
+          zoom={6}
+          style={{ height: "100%", width: "100%" }}
+          zoomControl={false}
+          attributionControl={false}
+        >
+          {geo && (
+            <GeoJSON
+              data={geo}
+              style={styleFeature}
+              onEachFeature={onEachFeature}
+            />
+          )}
+        </MapContainer>
+      </div>
+
+      <div
+        style={{
+          height: "60px",
+          background: "#f0f0f0",
+          borderTop: "1px solid #ccc",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "18px",
+          fontWeight: "bold",
+        }}
       >
-        {geo && (
-          <GeoJSON
-            data={geo}
-            style={styleFeature}
-            onEachFeature={onEachFeature}
-          />
-        )}
-      </MapContainer>
+        {selectedName ? `Wybrano: ${selectedName}` : "Kliknij województwo"}
+      </div>
     </div>
   );
 }
