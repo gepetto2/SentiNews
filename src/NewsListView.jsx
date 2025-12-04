@@ -1,19 +1,40 @@
+import { useEffect, useState } from "react";
+
 export default function NewsListView({ onBack }) {
-  const headlines = [
-    "Przykładowy nagłówek 1",
-    "Przykładowy nagłówek 2",
-    "Przykładowy nagłówek 3",
-  ];
+  const [headlines, setHeadlines] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("http://localhost:8000/rss");
+        const data = await res.json();
+        setHeadlines(data.headlines);
+      } catch (e) {
+        console.error("RSS error", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
   return (
     <div style={{ padding: 20 }}>
-      <button onClick={onBack} style={{ marginBottom: 10 }}>
-        Wróć
-      </button>
+      <button onClick={onBack}>Wróć</button>
       <h2>Lista newsów</h2>
+
+      {loading && <p>Ładowanie...</p>}
+
       <ul>
-        {headlines.map((h, i) => (
-          <li key={i}>{h}</li>
+        {headlines.map((item, i) => (
+          <li key={i}>
+            <strong>{item.title}</strong>
+            <br />
+            <a href={item.link} target="_blank">
+              Link
+            </a>
+          </li>
         ))}
       </ul>
     </div>
