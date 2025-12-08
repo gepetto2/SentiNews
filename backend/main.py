@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import json
 import feedparser
 
 app = FastAPI()
 
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -15,16 +15,22 @@ app.add_middleware(
 
 @app.get("/rss")
 def fetch_rss():
-    url = "https://www.polsatnews.pl/rss/wszystkie.xml"
-    feed = feedparser.parse(url)
+    with open("feeds.json", "r", encoding="utf-8") as f:
+        FEEDS = json.load(f)
 
-    headlines = [
-        {
-            "title": item.title,
-            "link": item.link,
-            "date": item.get("published", "")
-        }
-        for item in feed.entries
-    ]
+    all_news = []
 
-    return {"headlines": headlines}
+    for feed in FEEDS:
+        parsed = feedparser.parse(feed["url"])
+        for entry in parsed.entries:
+            all_news.append({
+                "title": entry.title,
+                "link": entry.link,
+                "published": entry.published,
+                "summary": entry.summary,
+                "source": feed["name"],
+                "region": feed["region"],
+                "category": feed["category"]
+            })
+
+    return all_news

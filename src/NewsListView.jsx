@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export default function NewsListView({ onBack }) {
-  const [headlines, setHeadlines] = useState([]);
+  const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -9,7 +9,7 @@ export default function NewsListView({ onBack }) {
       try {
         const res = await fetch("http://localhost:8000/rss");
         const data = await res.json();
-        setHeadlines(data.headlines);
+        setNewsList(data);
       } catch (e) {
         console.error("RSS error", e);
       } finally {
@@ -27,7 +27,7 @@ export default function NewsListView({ onBack }) {
       {loading && <p>Ładowanie...</p>}
 
       <ul>
-        {headlines.map((item, i) => (
+        {newsList.map((item, i) => (
           <li key={i}>
             <strong>{item.title}</strong>
             <br />
