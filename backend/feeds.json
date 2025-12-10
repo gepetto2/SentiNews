@@ -1,8 +1,98 @@
 [
   {
-    "name": "Wiadomości RSS - Bydgoszcz NaszeMiasto.pl",
+    "name": "Wiadomości RSS - Bydgoszcz",
     "url": "https://bydgoszcz.naszemiasto.pl/rss/artykuly/1565.xml",
     "region": "kujawsko-pomorskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Wiadomości RSS - Poznań",
+    "url": "https://tenpoznan.pl/category/wiadomosci-poznan/feed/",
+    "region": "wielkopolskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Wiadomości RSS - Gdańsk",
+    "url": "https://gdansk.naszemiasto.pl/rss/artykuly/1561.xml",
+    "region": "pomorskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Warszawa",
+    "url": "https://rss.gazeta.pl/pub/rss/warszawa.xml",
+    "region": "mazowieckie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Białystok",
+    "url": "https://www.bialystok.pl/rss/index/feed/id.2",
+    "region": "podlaskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Szczecin",
+    "url": "",
+    "region": "zachodnio-pomorskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Kraków",
+    "url": "https://www.krakow.pl/feeds/rss/komunikaty/26",
+    "region": "małopolskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Opole",
+    "url": "https://www.opole.pl/rss-aktualnosci.xml",
+    "region": "opolskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Śląskiego",
+    "url": "",
+    "region": "śląskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Wroclaw",
+    "url": "https://www.wroclaw.pl/dla-mieszkanca/rss",
+    "region": "dolnośląskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Zielona Góra",
+    "url": "",
+    "region": "lubuskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Lublin",
+    "url": "https://funduszeue.lubelskie.pl/rss/spotkania-wydarzenia/",
+    "region": "lubelskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Olsztyn",
+    "url": "https://www.olsztyn.bip.jur.pl/rss/najnowsze.php",
+    "region": "warmońsko-mazurskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Łódź",
+    "url": "",
+    "region": "łódzkie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Kielce",
+    "url": "https://kielce.naszemiasto.pl/rss/artykuly/1561.xml",
+    "region": "świętokrzyskie",
+    "category": "ogólne"
+  },
+  {
+    "name": "Nasze kanały RSS - Rzeszów",
+    "url": "https://rzeszow.naszemiasto.pl/rss/artykuly/1561.xml",
+    "region": "podkarpackie",
     "category": "ogólne"
   }
 ]
