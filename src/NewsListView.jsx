@@ -33,8 +33,7 @@ export default function NewsListView({ onBack }) {
             <br />
             {item.summary}
             <br />
-            Sentiment: {item.sentiment_label.label} (score:{" "}
-            {item.sentiment_label.score})
+            Sentiment: {item.sentiment_label} (temperature: {item.temperature})
             <hr />
           </li>
         ))}
