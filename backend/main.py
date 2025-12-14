@@ -8,6 +8,16 @@ import html
 
 # --- KONFIGURACJA I STAŁE ---
 
+# liczba newsów do pobrania z każdego feeda
+NEWS_COUNT = 10
+
+VALID_REGIONS = [
+    "dolnośląskie", "kujawsko-pomorskie", "lubelskie", "lubuskie", "łódzkie", 
+    "małopolskie", "mazowieckie", "opolskie", "podkarpackie", "podlaskie", 
+    "pomorskie", "śląskie", "świętokrzyskie", "warmińsko-mazurskie", 
+    "wielkopolskie", "zachodniopomorskie"
+]
+
 app = FastAPI()
 
 app.add_middleware(
@@ -61,9 +71,7 @@ def clean_html(raw_html):
 
     return " ".join(text.split())
 
-# --- ENDPOINTY ---
-@app.get("/rss")
-def fetch_rss():
+def get_processed_news():
     with open("feeds.json", "r", encoding="utf-8") as f:
         FEEDS = json.load(f)
 
@@ -71,11 +79,15 @@ def fetch_rss():
 
     for feed in FEEDS:
         parsed = feedparser.parse(feed["url"])
-        for entry in parsed.entries[:3]:
+        for entry in parsed.entries[:NEWS_COUNT]:
             raw_summary = entry.get('summary', '')
             clean_summary_text = clean_html(raw_summary)
             
-            full_text = f"{entry.title}. {clean_summary_text}"
+            # opcja z tytułem i podsumowaniem
+            # full_text = f"{entry.title}. {clean_summary_text}"
+
+            # opcja tylko z tytułem
+            full_text = entry.title
 
             # --- ANALIZA SENTYMENTU ---
 
@@ -99,3 +111,31 @@ def fetch_rss():
             })
 
     return all_news
+
+# --- ENDPOINTY ---
+
+@app.get("/rss")
+def read_rss():
+    """Endpoint dla widoku LISTY newsów"""
+    return get_processed_news()
+
+@app.get("/map-data")
+def read_map_data():
+    """Endpoint dla widoku MAPY"""
+    news_list = get_processed_news()
+    
+    region_temps = {region: [] for region in VALID_REGIONS}
+    
+    for item in news_list:
+        region_temps[item['region']].append(item['temperature'])
+
+    regional_averages = {}
+    for region in VALID_REGIONS:
+        temps = region_temps[region]
+        if temps:
+            avg_temp = sum(temps) / len(temps)
+            regional_averages[region] = round(avg_temp, 2)
+        else:
+            regional_averages[region] = None
+
+    return regional_averages
