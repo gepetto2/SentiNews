@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./App.css";
 import MapView from "./MapView.jsx";
 import NewsListView from "./NewsListView.jsx";
 
@@ -14,28 +15,21 @@ export default function App() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-      }}
-    >
-      <h1>SentiNews</h1>
-      <button
-        onClick={() => setScreen("map")}
-        style={{ margin: "10px", padding: "10px 20px" }}
-      >
-        Mapa
-      </button>
-      <button
-        onClick={() => setScreen("news")}
-        style={{ margin: "10px", padding: "10px 20px" }}
-      >
-        Lista newsów
-      </button>
+    <div className="home">
+      <div className="homeCard">
+        <div className="brandRow">
+          <h1 className="brandTitle">SentiNews</h1>
+        </div>
+
+        <div className="actions">
+          <button className="primaryBtn" onClick={() => setScreen("map")}>
+            Mapa
+          </button>
+          <button className="primaryBtn" onClick={() => setScreen("news")}>
+            Lista newsów
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

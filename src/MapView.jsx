@@ -2,24 +2,21 @@ import { useEffect, useState } from "react";
 import { MapContainer, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Funkcja pomocnicza do kolorów
 const getColorForTemperature = (temp) => {
-  if (temp === undefined || temp === null) return "#e0e0e0";
-
+  if (temp === undefined || temp === null) return "#e5e7eb";
   if (temp <= -0.5) return "#3b82f6";
   if (temp < -0.1) return "#93c5fd";
   if (temp >= -0.1 && temp <= 0.1) return "#d1d5db";
   if (temp > 0.1 && temp < 0.5) return "#fdba74";
   if (temp >= 0.5) return "#ef4444";
-
-  return "#e0e0e0";
+  return "#e5e7eb";
 };
 
 export default function MapView({ onBack }) {
   const [geo, setGeo] = useState(null);
   const [sentimentData, setSentimentData] = useState({});
   const [selectedName, setSelectedName] = useState(null);
-  const [isInfoOpen, setIsInfoOpen] = useState(false); // controls whether the info panel is open
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     fetch("/wojewodztwa.geojson")
@@ -28,30 +25,24 @@ export default function MapView({ onBack }) {
       .catch((e) => console.error("fetch error:", e));
   }, []);
 
-  // Pobieranie średnich temperatur nastrojów z backendu
   useEffect(() => {
     fetch("http://localhost:8000/map-data")
       .then((res) => res.json())
-      .then((data) => {
-        setSentimentData(data);
-      })
+      .then((data) => setSentimentData(data))
       .catch((e) => console.error("API fetch error:", e));
   }, []);
 
   const styleFeature = (feature) => {
     const name = feature.properties.nazwa;
-
     const temperature = sentimentData[name];
-    let fillColor = getColorForTemperature(temperature);
-
+    const fillColor = getColorForTemperature(temperature);
     const isSelected = name === selectedName;
 
     return {
-      fillColor: fillColor,
-      weight: isSelected ? 4 : 1,
-      color: isSelected ? "#333" : "white",
-      zIndex: 1000,
-      fillOpacity: 0.8,
+      fillColor,
+      weight: isSelected ? 3 : 1,
+      color: isSelected ? "#666" : "white",
+      fillOpacity: 0.9,
     };
   };
 
@@ -61,9 +52,11 @@ export default function MapView({ onBack }) {
     layer.on({
       click: (e) => {
         setSelectedName(name);
-        const layer = e.target;
-        layer.bringToFront();
+        e.target.bringToFront();
       },
+      mouseover: (e) => e.target.setStyle({ weight: 2 }),
+      mouseout: (e) =>
+        e.target.setStyle({ weight: name === selectedName ? 3 : 1 }),
     });
   };
 
@@ -71,123 +64,187 @@ export default function MapView({ onBack }) {
     ? sentimentData[selectedName.toLowerCase()]
     : null;
 
+ 
+  const cardStyle = {
+     borderRadius: "14px",
+    background: "#f6f6f6",                 
+    boxShadow: "0 10px 30px rgba(0,0,0,0.10)",
+    border: "1px solid rgba(0,0,0,0.14)",
+    fontWeight: 400,
+  };
+
   return (
     <div
       style={{
         height: "100vh",
-        display: "flex",
-        flexDirection: "column",
+        position: "relative",
+        fontWeight: 400,
+        background: "#f3f4f6", // pastelowe tło strony (poza samą mapą)
+        overflow: "hidden",
       }}
     >
-      <button onClick={onBack} style={{ padding: "5px 10px" }}>
-        Wróć
-      </button>
-      <div style={{ flex: "1 1 auto", position: "relative" }}>
-        {/*  added onClick and userSelect */}
-        <div
-          onClick={() => setIsInfoOpen((prev) => !prev)}
-          style={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            padding: "10px 14px",
-            background: "white",
-            borderRadius: "8px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-            cursor: "pointer",
-            zIndex: 1000,
-            userSelect: "none",
-          }}
-        >
-          ℹ️
-        </div>
-
-        {/*information panel with the application description */}
-        {isInfoOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: 70,
-              right: 20,
-              width: "320px",
-              background: "white",
-              borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-              padding: "14px 16px",
-              zIndex: 900,
-              fontSize: "14px",
-              lineHeight: "1.4",
-            }}
-          >
-            <h2
-              style={{
-                margin: 0,
-                marginBottom: "8px",
-                fontSize: "18px",
-              }}
-            >
-              O aplikacji SentiNews
-            </h2>
-            <p style={{ margin: 0, marginBottom: "6px" }}>
-              Aplikacja analizująca nastrój lokalnych wiadomości i postów w
-              wybranym województwie.
-            </p>
-            <p style={{ margin: 0, marginBottom: "6px" }}>
-              Pobiera nagłówki (oraz ewentualnie skróty) newsów lub wpisy z
-              Twittera/Reddita/Facebooka po polsku.
-            </p>
-            <p style={{ margin: 0, marginBottom: "6px" }}>
-              Analizuje nastroje (pozytywny/negatywny/neutralny, lub dokładniej
-              np. w określonej skali w stopniach).
-            </p>
-            <p style={{ margin: 0, marginBottom: "6px" }}>
-              Wizualizuje zmianę nastroju w czasie lub różnice między regionami
-              albo źródłami wpisów/newsów.
-            </p>
-            <p style={{ margin: 0 }}>
-              Umożliwia analizę &quot;temperatury emocjonalnej&quot; regionu lub
-              całego kraju.
-            </p>
-          </div>
-        )}
-
-        <MapContainer
-          center={[52, 19]}
-          zoom={6}
-          style={{ height: "100%", width: "100%" }}
-          zoomControl={false}
-          attributionControl={false}
-        >
-          {geo && (
-            <GeoJSON
-              data={geo}
-              style={styleFeature}
-              onEachFeature={onEachFeature}
-            />
-          )}
-        </MapContainer>
-      </div>
-
+      {/* Pastelowe tło mapy (pod kafelkami Leaflet) */}
       <div
         style={{
-          height: "60px",
-          background: "#f0f0f0",
-          borderTop: "1px solid #ccc",
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(1200px 600px at 20% 10%, rgba(147,197,253,0.35), transparent 60%), radial-gradient(900px 500px at 80% 80%, rgba(253,186,116,0.30), transparent 55%), linear-gradient(180deg, rgba(243,244,246,1) 0%, rgba(249,250,251,1) 100%)",
+          zIndex: 0,
+        }}
+      />
+
+      <MapContainer
+        center={[52, 19]}
+        zoom={6}
+        style={{
+          height: "100%",
+          width: "100%",
+          background: "transparent",
+          zIndex: 1,
+        }}
+        zoomControl={false}
+        attributionControl={false}
+      >
+        {geo && (
+          <GeoJSON
+            data={geo}
+            style={styleFeature}
+            onEachFeature={onEachFeature}
+          />
+        )}
+      </MapContainer>
+
+      {/* TOP BAR */}
+      <div
+        style={{
+          position: "absolute",
+          top: 14,
+          left: 14,
+          right: 14,
+          height: "52px",
           display: "flex",
           alignItems: "center",
-          flexDirection: "column",
-          justifyContent: "center",
-          fontSize: "18px",
-          fontWeight: "bold",
+          justifyContent: "space-between",
+          padding: "0 12px",
+          zIndex: 1000,
+          fontSize: "16px",
+          ...cardStyle,
         }}
       >
-        {selectedName ? `Wybrano: ${selectedName}` : "Kliknij województwo"}
-        {selectedName && (
-          <div style={{ fontSize: "14px", color: "#555" }}>
-            Temperatura:{" "}
-            {selectedTemp !== null ? selectedTemp.toFixed(2) : "Brak danych"}
+        <button
+          onClick={onBack}
+          style={{
+            border: "1px solid rgba(0,0,0,0.14)",
+            background: "#e5e7eb",
+            borderRadius: "12px",
+            padding: "8px 12px",
+            cursor: "pointer",
+            fontWeight: 400,
+            fontSize: "16px",
+          }}
+        >
+          Wróć
+        </button>
+
+        <div style={{ fontWeight: 400, fontSize: "16px" }}>Mapa nastrojów</div>
+
+        <button
+          onClick={() => setIsInfoOpen((prev) => !prev)}
+          style={{
+            border: "1px solid rgba(0,0,0,0.14)",
+            background: "#e5e7eb",
+            borderRadius: "12px",
+            width: "42px",
+            height: "38px",
+            cursor: "pointer",
+            fontWeight: 400,
+            fontSize: "16px",
+          }}
+          aria-label="Informacje"
+          title="Informacje"
+        >
+          ℹ️
+        </button>
+      </div>
+
+      {/* INFO */}
+      {isInfoOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: 76,
+            right: 14,
+            width: "360px",
+            maxWidth: "calc(100% - 28px)",
+            padding: "14px 16px",
+            zIndex: 1000,
+            fontSize: "14px",
+            ...cardStyle,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 8,
+            }}
+          >
+            <div style={{ fontWeight: 400, fontSize: "16px" }}>O SentiNews</div>
+            <button
+              onClick={() => setIsInfoOpen(false)}
+              style={{
+                border: "1px solid rgba(0,0,0,0.14)",
+                background: "#f6f6f6",
+                borderRadius: "12px",
+                width: 34,
+                height: 34,
+                cursor: "pointer",
+                fontSize: 16,
+                lineHeight: 1,
+                fontWeight: 400,
+              }}
+              aria-label="Zamknij"
+              title="Zamknij"
+            >
+              ✕
+            </button>
           </div>
-        )}
+
+          <div style={{ fontSize: 14, color: "#333", lineHeight: 1.45 }}>
+            Kliknij województwo, aby zobaczyć “temperaturę” nastroju.
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM CARD */}
+      <div
+        style={{
+          position: "absolute",
+          left: 14,
+          right: 14,
+          bottom: 14,
+          padding: "12px 14px",
+          zIndex: 1000,
+          textAlign: "center",
+          ...cardStyle,
+        }}
+      >
+        <div style={{ fontSize: 16, fontWeight: 400 }}>
+          {selectedName ? `Wybrano: ${selectedName}` : "Kliknij województwo"}
+        </div>
+
+        <div style={{ fontSize: 13, color: "#555", marginTop: 2 }}>
+          {selectedName
+            ? `Temperatura: ${
+                selectedTemp !== null && selectedTemp !== undefined
+                  ? selectedTemp.toFixed(2)
+                  : "Brak danych"
+              }`
+            : "Wybierz region, żeby zobaczyć wynik."}
+        </div>
       </div>
     </div>
   );

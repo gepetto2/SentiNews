@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./NewsListView.css";
 
 export default function NewsListView({ onBack }) {
   const [newsList, setNewsList] = useState([]);
@@ -20,24 +21,45 @@ export default function NewsListView({ onBack }) {
   }, []);
 
   return (
-    <div style={{ padding: 20 }}>
-      <button onClick={onBack}>Wróć</button>
-      <h2>Lista newsów</h2>
+    <div className="newsPage">
+      <div className="newsTopbar uiCard">
+        <button onClick={onBack} className="uiBtn">Wróć</button>
+        <div className="newsTopTitle">Lista newsów</div>
+        <div style={{ width: 74 }} />
+      </div>
 
-      {loading && <p>Ładowanie...</p>}
+      <div className="newsList">
+        {loading && <div className="uiCard newsItem">Ładowanie...</div>}
 
-      <ul>
-        {newsList.map((item, i) => (
-          <li key={i}>
-            <strong>{item.title}</strong>
-            <br />
-            {item.summary}
-            <br />
-            Sentiment: {item.sentiment_label} (temperature: {item.temperature})
-            <hr />
-          </li>
-        ))}
-      </ul>
+        {!loading && newsList.length === 0 && (
+          <div className="uiCard newsItem">Brak newsów.</div>
+        )}
+
+        {!loading &&
+          newsList.map((item, i) => (
+            <div key={i} className="uiCard newsItem">
+              <div className="newsTitleRow">
+                <div className="newsTitle">{item.title}</div>
+              </div>
+
+              <div className="newsSummary">{item.summary}</div>
+
+              {/* TYLKO PO LEWEJ (jak było): Sentiment + Temp */}
+              <div className="newsMetaRow">
+                <span className="uiPill">
+                  Sentiment: {item.sentiment_label ?? "Brak"}
+                </span>
+
+                <span className="uiPill">
+                  Temp:{" "}
+                  {item.temperature !== undefined && item.temperature !== null
+                    ? Number(item.temperature).toFixed(2)
+                    : "Brak danych"}
+                </span>
+              </div>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
