@@ -31,9 +31,10 @@ export default function NewsListView({ onBack }) {
           <li key={i}>
             <strong>{item.title}</strong>
             <br />
-            <a href={item.link} target="_blank">
-              Link
-            </a>
+            {item.summary}
+            <br />
+            Sentiment: {item.sentiment_label} (temperature: {item.temperature})
+            <hr />
           </li>
         ))}
       </ul>

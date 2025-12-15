@@ -2,8 +2,22 @@ import { useEffect, useState } from "react";
 import { MapContainer, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+// Funkcja pomocnicza do kolorów
+const getColorForTemperature = (temp) => {
+  if (temp === undefined || temp === null) return "#e0e0e0";
+
+  if (temp <= -0.5) return "#3b82f6";
+  if (temp < -0.1) return "#93c5fd";
+  if (temp >= -0.1 && temp <= 0.1) return "#d1d5db";
+  if (temp > 0.1 && temp < 0.5) return "#fdba74";
+  if (temp >= 0.5) return "#ef4444";
+
+  return "#e0e0e0";
+};
+
 export default function MapView({ onBack }) {
   const [geo, setGeo] = useState(null);
+  const [sentimentData, setSentimentData] = useState({});
   const [selectedName, setSelectedName] = useState(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false); // controls whether the info panel is open
 
@@ -14,34 +28,48 @@ export default function MapView({ onBack }) {
       .catch((e) => console.error("fetch error:", e));
   }, []);
 
-  const defaultStyle = {
-    fillColor: "#357edd",
-    weight: 1,
-    color: "white",
-    fillOpacity: 0.6,
-  };
-
-  const highlightStyle = {
-    fillColor: "#ff7f0e",
-    weight: 2,
-    color: "white",
-    fillOpacity: 0.8,
-  };
+  // Pobieranie średnich temperatur nastrojów z backendu
+  useEffect(() => {
+    fetch("http://localhost:8000/map-data")
+      .then((res) => res.json())
+      .then((data) => {
+        setSentimentData(data);
+      })
+      .catch((e) => console.error("API fetch error:", e));
+  }, []);
 
   const styleFeature = (feature) => {
     const name = feature.properties.nazwa;
-    return name === selectedName ? highlightStyle : defaultStyle;
+
+    const temperature = sentimentData[name];
+    let fillColor = getColorForTemperature(temperature);
+
+    const isSelected = name === selectedName;
+
+    return {
+      fillColor: fillColor,
+      weight: isSelected ? 4 : 1,
+      color: isSelected ? "#333" : "white",
+      zIndex: 1000,
+      fillOpacity: 0.8,
+    };
   };
 
   const onEachFeature = (feature, layer) => {
     const name = feature.properties.nazwa;
 
     layer.on({
-      click: () => {
+      click: (e) => {
         setSelectedName(name);
+        const layer = e.target;
+        layer.bringToFront();
       },
     });
   };
+
+  const selectedTemp = selectedName
+    ? sentimentData[selectedName.toLowerCase()]
+    : null;
 
   return (
     <div
@@ -147,12 +175,19 @@ export default function MapView({ onBack }) {
           borderTop: "1px solid #ccc",
           display: "flex",
           alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
           fontSize: "18px",
           fontWeight: "bold",
         }}
       >
         {selectedName ? `Wybrano: ${selectedName}` : "Kliknij województwo"}
+        {selectedName && (
+          <div style={{ fontSize: "14px", color: "#555" }}>
+            Temperatura:{" "}
+            {selectedTemp !== null ? selectedTemp.toFixed(2) : "Brak danych"}
+          </div>
+        )}
       </div>
     </div>
   );
