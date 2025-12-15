@@ -48,8 +48,8 @@
     "category": "ogólne"
   },
   {
-    "name": "Nasze kanały RSS - Śląskiego",
-    "url": "",
+    "name": "Nasze kanały RSS - Katowice",
+    "url": "https://katowice.naszemiasto.pl/rss/artykuly/1561.xml",
     "region": "śląskie",
     "category": "ogólne"
   },
@@ -61,7 +61,7 @@
   },
   {
     "name": "Nasze kanały RSS - Zielona Góra",
-    "url": "",
+    "url": "https://zielonagora.naszemiasto.pl/rss/artykuly/1561.xml",
     "region": "lubuskie",
     "category": "ogólne"
   },
@@ -79,7 +79,7 @@
   },
   {
     "name": "Nasze kanały RSS - Łódź",
-    "url": "",
+    "url": "https://lodz.naszemiasto.pl/rss/artykuly/1561.xml",
     "region": "łódzkie",
     "category": "ogólne"
   },
