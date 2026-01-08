@@ -18,6 +18,10 @@ VALID_REGIONS = [
     "wielkopolskie", "zachodniopomorskie"
 ]
 
+CATEGORIES = [
+    "Ogólne", "Turystyka", "Sport", "Rozrywka"
+]
+
 app = FastAPI()
 
 app.add_middleware(
