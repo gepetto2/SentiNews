@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./NewsListView.css";
 
 export default function NewsListView({ onBack }) {
   const [newsList, setNewsList] = useState([]);
