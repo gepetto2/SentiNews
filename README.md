@@ -14,5 +14,6 @@ Analiza „temperatury emocjonalnej” regionu lub kraju.
 
 Mateusz P.
 Mateusz M.
+Piotr Z.
 Oskar H.
 Mikołaj P.
