@@ -12,7 +12,7 @@ Wizualizuje zmianę nastroju w czasie lub różnice między regionami albo źró
 
 Analiza „temperatury emocjonalnej” regionu lub kraju.
 
-Mateusz P.
+Mateusz P..
 Mateusz M.
 Piotr Z.
 Oskar H.
