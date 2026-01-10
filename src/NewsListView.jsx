@@ -43,13 +43,14 @@ export default function NewsListView({ onBack }) {
   const categories = [...new Set(newsList.map((n) => n.category).filter(Boolean))];
 
   return (
-    <div style={{ padding: 20 }}>
-      <button onClick={onBack}>Wróć</button>
-      <h2>Lista newsów</h2>
+    <div className="newsPage">
+      <div className="newsTopbar uiCard">
+        <button onClick={onBack} className="uiBtn">Wróć</button>
+        <div className="newsTopTitle">Lista newsów</div>
+        <div style={{ width: 74 }} />
+      </div>
 
-      {loading && <p>Ładowanie...</p>}
-
-      <div style={{ marginBottom: 20 }}>
+      <div className="newsTopbar uiCard" style={{ marginTop: 10, flexDirection: "column", height: "auto" }}>
         <label>
           Filtruj po sentymencie:{" "}
           <select value={filterSentiment} onChange={(e) => setFilterSentiment(e.target.value)}>
@@ -81,24 +82,46 @@ export default function NewsListView({ onBack }) {
         </label>
       </div>
 
-      <ul>
-        {filteredNews.length === 0 && !loading && <li>Brak newsów spełniających kryteria</li>}
+      <div className="newsList">
+        {loading && <div className="uiCard newsItem">Ładowanie...</div>}
 
-        {filteredNews.map((item, i) => (
-          <li key={i}>
-            <strong>{item.title}</strong>
-            <br />
-            {item.summary}
-            <br />
-            Sentiment: {item.sentiment_label} (temperature: {item.temperature})
-            <br />
-            Region: {item.region || "brak"}
-            <br />
-            Kategoria: {item.category || "brak"}
-            <hr />
-          </li>
-        ))}
-      </ul>
+        {!loading && newsList.length === 0 && (
+          <div className="uiCard newsItem">Brak newsów.</div>
+        )}
+
+        {!loading &&
+          filteredNews.map((item, i) => (
+            <div key={i} className="uiCard newsItem">
+              <div className="newsTitleRow">
+                <div className="newsTitle">{item.title}</div>
+              </div>
+
+              <div className="newsSummary">{item.summary}</div>
+
+              {/* TYLKO PO LEWEJ (jak było): Sentiment + Temp */}
+              <div className="newsMetaRow">
+                <span className="uiPill">
+                  Sentiment: {item.sentiment_label ?? "Brak"}
+                </span>
+
+                <span className="uiPill">
+                  Region: {item.region ?? "Brak"}
+                </span>
+
+                <span className="uiPill">
+                  Kategoria: {item.category ?? "Brak"}
+                </span>
+
+                <span className="uiPill">
+                  Temp:{" "}
+                  {item.temperature !== undefined && item.temperature !== null
+                    ? Number(item.temperature).toFixed(2)
+                    : "Brak danych"}
+                </span>
+              </div>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
