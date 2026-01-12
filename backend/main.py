@@ -5,6 +5,8 @@ import feedparser
 from transformers import pipeline
 import re
 import html
+import os
+import time
 
 # --- KONFIGURACJA I STAŁE ---
 
@@ -21,6 +23,9 @@ VALID_REGIONS = [
 CATEGORIES = [
     "Ogólne", "Turystyka", "Sport", "Rozrywka"
 ]
+
+CACHE_FILE = "sentiment_cache.json"
+CACHE_TTL_SECONDS = 60 * 60
 
 app = FastAPI()
 
@@ -75,7 +80,26 @@ def clean_html(raw_html):
 
     return " ".join(text.split())
 
+def load_cache():
+    if not os.path.exists(CACHE_FILE):
+        return None
+    with open(CACHE_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_cache(data):
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def is_cache_valid(cache):
+    if not cache:
+        return False
+    return (time.time() - cache["timestamp"]) < CACHE_TTL_SECONDS
+
 def get_processed_news():
+    cache = load_cache()
+    if is_cache_valid(cache):
+        return cache["data"]
+
     with open("feeds.json", "r", encoding="utf-8") as f:
         FEEDS = json.load(f)
 
@@ -86,22 +110,13 @@ def get_processed_news():
         for entry in parsed.entries[:NEWS_COUNT]:
             raw_summary = entry.get('summary', '')
             clean_summary_text = clean_html(raw_summary)
-            
-            # opcja z tytułem i podsumowaniem
             full_text = f"{entry.title}. {clean_summary_text}"
 
-            # opcja tylko z tytułem
-            # full_text = entry.title
-
             # --- ANALIZA SENTYMENTU ---
-
             result = sentiment_pipeline(full_text, truncation=True, max_length=512)[0]
-            
             label = result['label']
             score = result['score']
             temperature = calculate_temperature(label, score)
-                
-            # --- BUDOWANIE WYNIKU ---
             all_news.append({
                 "title": entry.title,
                 "link": entry.link,
@@ -113,6 +128,11 @@ def get_processed_news():
                 "sentiment_label": label,
                 "temperature": temperature
             })
+
+    save_cache({
+        "timestamp": time.time(),
+        "data": all_news
+    })
 
     return all_news
 

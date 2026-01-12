@@ -24,6 +24,11 @@ dist-ssr
 *.sw?
 
 backend/__pycache__/
+backend/sentiment_cache.json
+
+.vercel
+
+android
 
 venv/
 venv/*
