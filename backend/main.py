@@ -15,7 +15,7 @@ VALID_REGIONS = [
     "dolnośląskie", "kujawsko-pomorskie", "lubelskie", "lubuskie", "łódzkie", 
     "małopolskie", "mazowieckie", "opolskie", "podkarpackie", "podlaskie", 
     "pomorskie", "śląskie", "świętokrzyskie", "warmińsko-mazurskie", 
-    "wielkopolskie", "zachodniopomorskie"
+    "wielkopolskie", "zachodnio-pomorskie"
 ]
 
 CATEGORIES = [
@@ -88,10 +88,10 @@ def get_processed_news():
             clean_summary_text = clean_html(raw_summary)
             
             # opcja z tytułem i podsumowaniem
-            # full_text = f"{entry.title}. {clean_summary_text}"
+            full_text = f"{entry.title}. {clean_summary_text}"
 
             # opcja tylko z tytułem
-            full_text = entry.title
+            # full_text = entry.title
 
             # --- ANALIZA SENTYMENTU ---
 
