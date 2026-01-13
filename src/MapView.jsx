@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { MapContainer, GeoJSON } from "react-leaflet";
+import chroma from "chroma-js";
 import "leaflet/dist/leaflet.css";
+
+const colorScale = chroma.scale(['#ef4444', '#22c55e']).domain([-1, 1]);
 
 const getColorForTemperature = (temp) => {
   if (temp === undefined || temp === null) return "#e5e7eb";
-  if (temp <= -0.5) return "#3b82f6";
-  if (temp < -0.1) return "#93c5fd";
-  if (temp >= -0.1 && temp <= 0.1) return "#d1d5db";
-  if (temp > 0.1 && temp < 0.5) return "#fdba74";
-  if (temp >= 0.5) return "#ef4444";
-  return "#e5e7eb";
+
+  return colorScale(temp).hex();
 };
 
 export default function MapView({ onBack }) {
