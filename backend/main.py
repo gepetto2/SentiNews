@@ -27,7 +27,7 @@ CATEGORIES = [
 ]
 
 CACHE_FILE = "sentiment_cache.json"
-CACHE_TTL_SECONDS = 60 * 60
+CACHE_TTL_SECONDS = 24 * 60 * 60
 
 app = FastAPI()
 
