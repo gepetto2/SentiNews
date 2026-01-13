@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import feedparser
-from transformers import pipeline
+from openai import OpenAI
 import re
 import html
 import os
@@ -10,14 +10,16 @@ import time
 
 # --- KONFIGURACJA I STAŁE ---
 
-# liczba newsów do pobrania z każdego feeda
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 NEWS_COUNT = 10
 
 VALID_REGIONS = [
     "dolnośląskie", "kujawsko-pomorskie", "lubelskie", "lubuskie", "łódzkie", 
     "małopolskie", "mazowieckie", "opolskie", "podkarpackie", "podlaskie", 
     "pomorskie", "śląskie", "świętokrzyskie", "warmińsko-mazurskie", 
-    "wielkopolskie", "zachodnio-pomorskie"
+    "wielkopolskie", "zachodniopomorskie"
 ]
 
 CATEGORIES = [
@@ -37,33 +39,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-sentiment_pipeline = pipeline("text-classification", model="tabularisai/multilingual-sentiment-analysis")
-
 HTML_TAGS_PATTERN = re.compile('<.*?>')
-
-TEMP_MAPPING = {
-    'very negative': -1.0,
-    'negative': -0.6,
-    'neutral': 0.0,
-    'very positive': 1.0,
-    'positive': 0.6
-}
 
 # --- FUNKCJE POMOCNICZE ---
 
-def calculate_temperature(label, score):
-    # zamienia etykietę tekstową na wartość liczbową (-1.0 do 1.0).
-    # mnoży wynik przez pewność modelu (score).
+def analyze_with_gpt(text):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "Jesteś ekspertem od oceny sentymentu. Oceń następujący tekst będący nagłówkiem i podsumowaniem wiadomości. Zwróć TYLKO liczbę zmiennoprzecinkową od -1.0 (negatywny) do 1.0 (pozytywny) określającą wydźwięk tekstu."
+                },
+                {"role": "user", "content": text[:1000]}
+            ],
+            temperature=0.0
+        )
+        return float(response.choices[0].message.content.strip())
+    except Exception as e:
+        print(f"Błąd OpenAI: {e}")
+        return 0.0
 
-    label_lower = label.lower()
-    base_temp = 0.0
-    
-    for key, val in TEMP_MAPPING.items():
-        if key in label_lower:
-            base_temp = val
-            break
-            
-    return base_temp * score
+def get_label_from_score(score):
+    if score <= -0.5: return "very negative"
+    if score < -0.1: return "negative"
+    if score > 0.5: return "very positive"
+    if score > 0.1: return "positive"
+    return "neutral"
 
 def clean_html(raw_html):
     # czyszczenie podsumowania newsów
@@ -112,11 +115,9 @@ def get_processed_news():
             clean_summary_text = clean_html(raw_summary)
             full_text = f"{entry.title}. {clean_summary_text}"
 
-            # --- ANALIZA SENTYMENTU ---
-            result = sentiment_pipeline(full_text, truncation=True, max_length=512)[0]
-            label = result['label']
-            score = result['score']
-            temperature = calculate_temperature(label, score)
+            temperature = analyze_with_gpt(full_text)
+            label = get_label_from_score(temperature)
+            
             all_news.append({
                 "title": entry.title,
                 "link": entry.link,
