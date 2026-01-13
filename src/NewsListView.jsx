@@ -13,7 +13,7 @@ export default function NewsListView({ onBack }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("http://localhost:8000/rss");
+        const res = await fetch("https://sentinews.onrender.com/rss");
         const data = await res.json();
         setNewsList(data);
       } catch (e) {

@@ -25,7 +25,7 @@ export default function MapView({ onBack }) {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:8000/map-data")
+    fetch("https://sentinews.onrender.com/map-data")
       .then((res) => res.json())
       .then((data) => setSentimentData(data))
       .catch((e) => console.error("API fetch error:", e));
