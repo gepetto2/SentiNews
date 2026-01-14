@@ -3,15 +3,29 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import feedparser
 from openai import OpenAI
+from supabase import create_client, Client
+from dotenv import load_dotenv
 import re
 import html
 import os
 import time
 
+# Ładowanie zmiennych z .env
+load_dotenv()
+
 # --- KONFIGURACJA I STAŁE ---
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# Inicjalizacja klienta
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+else:
+    print("UWAGA: Brak zmiennych SUPABASE_URL/KEY w pliku .env")
 
 NEWS_COUNT = 10
 
@@ -56,6 +70,7 @@ def analyze_with_gpt(text):
             ],
             temperature=0.0
         )
+        print(f"Analizowanie newsa {text[:30]}")
         return float(response.choices[0].message.content.strip())
     except Exception as e:
         print(f"Błąd OpenAI: {e}")
@@ -103,8 +118,14 @@ def get_processed_news():
     if is_cache_valid(cache):
         return cache["data"]
 
-    with open("feeds.json", "r", encoding="utf-8") as f:
-        FEEDS = json.load(f)
+    try:
+        print("Pobieranie listy kanałów z Supabase...")
+        response = supabase.table("feeds").select("*").execute()
+        FEEDS = response.data
+        print(f"Znaleziono {len(FEEDS)} kanałów RSS.")
+    except Exception as e:
+        print(f"Błąd pobierania listy feedów z bazy: {e}")
+        FEEDS = []
 
     all_news = []
 
