@@ -89,7 +89,8 @@ def clean_html(raw_html):
 
     return " ".join(text.split())
 
-def sync_and_get_news():
+def sync_logic():
+    print("--- START: Automatyczna aktualizacja bazy ---")
     # 1. Pobranie listy kanałów
     try:
         print("Pobieranie listy kanałów z Supabase...")
@@ -98,8 +99,9 @@ def sync_and_get_news():
         print(f"Znaleziono {len(FEEDS)} kanałów RSS.")
     except Exception as e:
         print(f"Błąd pobierania listy feedów z bazy: {e}")
-        FEEDS = []
+        return {"status": "error", "message": str(e)}
 
+    count_new = 0
     for feed in FEEDS:
         url = feed.get("url")
         if not url: 
@@ -144,7 +146,12 @@ def sync_and_get_news():
                 supabase.table("news").insert(new_record).execute()
             except Exception as e:
                 print(f"Błąd zapisu: {e}")
+            count_new += 1
+            
+    print(f"--- KONIEC: Dodano {count_new} nowych artykułów ---")
+    return {"status": "success", "added": count_new}
 
+def get_data_only():
     try:
         response = supabase.table("news").select("*").order("id", desc=True).limit(100).execute()
         return response.data
@@ -154,15 +161,19 @@ def sync_and_get_news():
 
 # --- ENDPOINTY ---
 
+@app.get("/update-news")
+def force_update():
+    return sync_logic()
+
 @app.get("/rss")
 def read_rss():
     """Endpoint dla widoku LISTY newsów"""
-    return sync_and_get_news()
+    return get_data_only()
 
 @app.get("/map-data")
 def read_map_data():
     """Endpoint dla widoku MAPY"""
-    news_list = sync_and_get_news()
+    news_list = get_data_only()
     
     region_temps = {region: [] for region in VALID_REGIONS}
     
