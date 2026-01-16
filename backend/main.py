@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import json
 import feedparser
 from openai import OpenAI
 from supabase import create_client, Client
@@ -8,7 +7,6 @@ from dotenv import load_dotenv
 import re
 import html
 import os
-import time
 
 # Ładowanie zmiennych z .env
 load_dotenv()
@@ -35,13 +33,6 @@ VALID_REGIONS = [
     "pomorskie", "śląskie", "świętokrzyskie", "warmińsko-mazurskie", 
     "wielkopolskie", "zachodniopomorskie"
 ]
-
-CATEGORIES = [
-    "Ogólne", "Turystyka", "Sport", "Rozrywka"
-]
-
-CACHE_FILE = "sentiment_cache.json"
-CACHE_TTL_SECONDS = 24 * 60 * 60
 
 app = FastAPI()
 
@@ -98,26 +89,8 @@ def clean_html(raw_html):
 
     return " ".join(text.split())
 
-def load_cache():
-    if not os.path.exists(CACHE_FILE):
-        return None
-    with open(CACHE_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_cache(data):
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-def is_cache_valid(cache):
-    if not cache:
-        return False
-    return (time.time() - cache["timestamp"]) < CACHE_TTL_SECONDS
-
-def get_processed_news():
-    cache = load_cache()
-    if is_cache_valid(cache):
-        return cache["data"]
-
+def sync_and_get_news():
+    # 1. Pobranie listy kanałów
     try:
         print("Pobieranie listy kanałów z Supabase...")
         response = supabase.table("feeds").select("*").execute()
@@ -127,19 +100,35 @@ def get_processed_news():
         print(f"Błąd pobierania listy feedów z bazy: {e}")
         FEEDS = []
 
-    all_news = []
-
     for feed in FEEDS:
-        parsed = feedparser.parse(feed["url"])
-        for entry in parsed.entries[:NEWS_COUNT]:
+        url = feed.get("url")
+        if not url: 
+            print("Brak URL w feedzie, pomijam...")
+            continue
+
+        try:
+            parsed = feedparser.parse(url)
+        except Exception:
+            print(f"Błąd parsowania feeda: {url}")
+            continue
+            
+        for entry in parsed.entries[:NEWS_COUNT]: 
+            # sprawdzanie czy news już jest w bazie
+            existing = supabase.table("news").select("id").eq("link", entry.link).execute()
+            
+            if existing.data:
+                print(f"News już istnieje w bazie: {entry.link}")
+                continue
+
             raw_summary = entry.get('summary', '')
             clean_summary_text = clean_html(raw_summary)
             full_text = f"{entry.title}. {clean_summary_text}"
 
             temperature = analyze_with_gpt(full_text)
             label = get_label_from_score(temperature)
-            
-            all_news.append({
+
+            # zapisywanie newsa do bazy
+            new_record = {
                 "title": entry.title,
                 "link": entry.link,
                 "published": entry.get('published', "Brak daty"),
@@ -149,26 +138,31 @@ def get_processed_news():
                 "category": feed.get("category", "Ogólne"),
                 "sentiment_label": label,
                 "temperature": temperature
-            })
+            }
+            
+            try:
+                supabase.table("news").insert(new_record).execute()
+            except Exception as e:
+                print(f"Błąd zapisu: {e}")
 
-    save_cache({
-        "timestamp": time.time(),
-        "data": all_news
-    })
-
-    return all_news
+    try:
+        response = supabase.table("news").select("*").order("id", desc=True).limit(100).execute()
+        return response.data
+    except Exception as e:
+        print(f"Błąd pobierania newsów: {e}")
+        return []
 
 # --- ENDPOINTY ---
 
 @app.get("/rss")
 def read_rss():
     """Endpoint dla widoku LISTY newsów"""
-    return get_processed_news()
+    return sync_and_get_news()
 
 @app.get("/map-data")
 def read_map_data():
     """Endpoint dla widoku MAPY"""
-    news_list = get_processed_news()
+    news_list = sync_and_get_news()
     
     region_temps = {region: [] for region in VALID_REGIONS}
     
