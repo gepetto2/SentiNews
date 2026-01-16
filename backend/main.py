@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import re
 import html
 import os
+import json
 
 # Ładowanie zmiennych z .env
 load_dotenv()
@@ -24,8 +25,6 @@ if SUPABASE_URL and SUPABASE_KEY:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 else:
     print("UWAGA: Brak zmiennych SUPABASE_URL/KEY w pliku .env")
-
-NEWS_COUNT = 10
 
 VALID_REGIONS = [
     "dolnośląskie", "kujawsko-pomorskie", "lubelskie", "lubuskie", "łódzkie", 
@@ -48,24 +47,35 @@ HTML_TAGS_PATTERN = re.compile('<.*?>')
 
 # --- FUNKCJE POMOCNICZE ---
 
-def analyze_with_gpt(text):
+def analyze_with_gpt(text, region_name):
+    system_prompt = f"""
+    Jesteś analitykiem mediów dla regionu: {region_name}.
+    Twoim zadaniem jest ocena dwóch parametrów:
+    1. RELEVANCE (0.0 do 1.0): Jak bardzo ten artykuł dotyczy konkretnie spraw lokalnych tego regionu?
+       - 1.0: Ściśle lokalne (np. wypadek w centrum miasta, lokalne wybory, budowa drogi w powiecie).
+       - 0.5: Dotyczy regionu, ale też całego kraju (np. skutki nowej ustawy dla rolników z regionu).
+       - 0.1: Ogólnopolskie/Światowe, słaby związek z regionem.
+       - 0.0: Zupełnie nietrafione (np. news z innego województwa).
+
+    2. SENTIMENT (od -1.0 (negatywny) do 1.0 (pozytywny)): Wydźwięk emocjonalny tekstu.
+
+    Zwróć TYLKO JSON: {{ "relevance": float, "sentiment": float }}
+    """
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {
-                    "role": "system", 
-                    "content": "Jesteś ekspertem od oceny sentymentu. Oceń następujący tekst będący nagłówkiem i podsumowaniem wiadomości. Zwróć TYLKO liczbę zmiennoprzecinkową od -1.0 (negatywny) do 1.0 (pozytywny) określającą wydźwięk tekstu."
-                },
-                {"role": "user", "content": text[:1000]}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text[:1500]}
             ],
-            temperature=0.0
+            temperature=0.0,
+            response_format={ "type": "json_object" }
         )
-        print(f"Analizowanie newsa {text[:30]}")
-        return float(response.choices[0].message.content.strip())
+        return json.loads(response.choices[0].message.content)
     except Exception as e:
-        print(f"Błąd OpenAI: {e}")
-        return 0.0
+        print(f"Błąd analizy: {e}")
+        return {"relevance": 0.0, "sentiment": 0.0}
 
 def get_label_from_score(score):
     if score <= -0.5: return "very negative"
@@ -114,7 +124,7 @@ def sync_logic():
             print(f"Błąd parsowania feeda: {url}")
             continue
             
-        for entry in parsed.entries[:NEWS_COUNT]: 
+        for entry in parsed.entries: 
             # sprawdzanie czy news już jest w bazie
             existing = supabase.table("news").select("id").eq("link", entry.link).execute()
             
@@ -126,7 +136,10 @@ def sync_logic():
             clean_summary_text = clean_html(raw_summary)
             full_text = f"{entry.title}. {clean_summary_text}"
 
-            temperature = analyze_with_gpt(full_text)
+            analysis = analyze_with_gpt(full_text, feed.get("region", "Polska"))
+            
+            relevance = analysis.get("relevance", 0.0)
+            temperature = analysis.get("sentiment", 0.0)
             label = get_label_from_score(temperature)
 
             # zapisywanie newsa do bazy
@@ -139,7 +152,8 @@ def sync_logic():
                 "region": feed.get("region", "Polska"),
                 "category": feed.get("category", "Ogólne"),
                 "sentiment_label": label,
-                "temperature": temperature
+                "temperature": temperature,
+                "local_relevance": relevance
             }
             
             try:
@@ -153,7 +167,7 @@ def sync_logic():
 
 def get_data_only():
     try:
-        response = supabase.table("news").select("*").order("id", desc=True).limit(100).execute()
+        response = supabase.table("news").select("*").order("id", desc=True).execute()
         return response.data
     except Exception as e:
         print(f"Błąd pobierania newsów: {e}")
