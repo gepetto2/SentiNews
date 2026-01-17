@@ -3,4 +3,5 @@ feedparser==6.0.12
 openai==2.15.0
 python-dotenv==1.2.1
 uvicorn
+python_dateutil==2.9.0.post0
 supabase==2.27.2

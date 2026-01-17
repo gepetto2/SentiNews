@@ -8,6 +8,9 @@ import re
 import html
 import os
 import json
+from datetime import datetime, timedelta, timezone
+import time
+from dateutil import parser
 
 # Ładowanie zmiennych z .env
 load_dotenv()
@@ -142,11 +145,28 @@ def sync_logic():
             temperature = analysis.get("sentiment", 0.0)
             label = get_label_from_score(temperature)
 
-            # zapisywanie newsa do bazy
+            published_struct = entry.get('published_parsed') or entry.get('updated_parsed')
+            
+            final_iso_date = None
+
+            if published_struct:
+                ts = time.mktime(published_struct)
+                dt_object = datetime.fromtimestamp(ts)
+                final_iso_date = dt_object.isoformat()
+            else:
+                raw_date_str = entry.get('published')
+                if raw_date_str:
+                    try:
+                        dt_object = parser.parse(raw_date_str)
+                        final_iso_date = dt_object.isoformat()
+                        print(f"[INFO] Uratowano datę z tekstu: '{raw_date_str}' -> {final_iso_date}")
+                    except Exception:
+                        print(f"[WARN] Nie udało się sparsować daty: '{raw_date_str}'")
+
             new_record = {
                 "title": entry.title,
                 "link": entry.link,
-                "published": entry.get('published', "Brak daty"),
+                "published": final_iso_date,
                 "summary": clean_summary_text,
                 "source": feed.get("name", "Nieznane źródło"),
                 "region": feed.get("region", "Polska"),
@@ -187,19 +207,37 @@ def read_rss():
 @app.get("/map-data")
 def read_map_data():
     """Endpoint dla widoku MAPY"""
-    news_list = get_data_only()
+
+    cutoff_date = datetime.now(timezone.utc) - timedelta(hours=48)
+    cutoff_str = cutoff_date.isoformat()
+
+    try:
+        response = supabase.table("news").select("*").gte("published", cutoff_str).execute()
+        news_list = response.data
+    except Exception as e:
+        print(f"Błąd pobierania danych dla mapy: {e}")
+        news_list = []
     
-    region_temps = {region: [] for region in VALID_REGIONS}
+    region_stats = {region: {"weighted_sum": 0.0, "total_weight": 0.0} for region in VALID_REGIONS}
     
     for item in news_list:
-        region_temps[item['region']].append(item['temperature'])
+        r = item.get('region')
+        if not r: continue
+        key = r.lower().strip()
+        
+        if key in region_stats:
+            temp = item.get('temperature', 0.0)
+            weight = item.get('relevance', 1.0) 
+            
+            region_stats[key]["weighted_sum"] += (temp * weight)
+            region_stats[key]["total_weight"] += weight
 
     regional_averages = {}
     for region in VALID_REGIONS:
-        temps = region_temps[region]
-        if temps:
-            avg_temp = sum(temps) / len(temps)
-            regional_averages[region] = round(avg_temp, 2)
+        stats = region_stats[region]
+        if stats["total_weight"] > 0:
+            avg = stats["weighted_sum"] / stats["total_weight"]
+            regional_averages[region] = round(avg, 2)
         else:
             regional_averages[region] = None
 

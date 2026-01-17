@@ -3,7 +3,9 @@ import { MapContainer, GeoJSON } from "react-leaflet";
 import chroma from "chroma-js";
 import "leaflet/dist/leaflet.css";
 
-const colorScale = chroma.scale(['#ef4444', '#22c55e']).domain([-1, 1]);
+const colorScale = chroma.scale(['#dc2626', '#f3f4f6', '#16a34a'])
+    .domain([-1, 0, 1]) 
+    .mode('lch');
 
 const getColorForTemperature = (temp) => {
   if (temp === undefined || temp === null) return "#e5e7eb";

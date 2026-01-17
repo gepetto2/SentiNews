@@ -24,7 +24,6 @@ dist-ssr
 *.sw?
 
 backend/__pycache__/
-backend/sentiment_cache.json
 backend/.env
 
 .vercel
