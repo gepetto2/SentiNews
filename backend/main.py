@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import feedparser
 from openai import OpenAI
@@ -132,7 +132,6 @@ def sync_logic():
             existing = supabase.table("news").select("id").eq("link", entry.link).execute()
             
             if existing.data:
-                print(f"News już istnieje w bazie: {entry.link}")
                 continue
 
             raw_summary = entry.get('summary', '')
@@ -196,8 +195,9 @@ def get_data_only():
 # --- ENDPOINTY ---
 
 @app.get("/update-news")
-def force_update():
-    return sync_logic()
+def force_update(background_tasks: BackgroundTasks):
+    background_tasks.add_task(sync_logic)
+    return {"status": "accepted", "message": "Synchronizacja rozpoczęta w tle"}
 
 @app.get("/rss")
 def read_rss():
