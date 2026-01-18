@@ -51,17 +51,33 @@ HTML_TAGS_PATTERN = re.compile('<.*?>')
 # --- FUNKCJE POMOCNICZE ---
 
 def analyze_with_gpt(text, region_name):
-    system_prompt = f"""
-    Jesteś analitykiem mediów dla regionu: {region_name}.
-    Zwróć JSON z 3 polami:
-    1. "relevance" (float 0.0 do 1.0): Jak bardzo dotyczy to spraw lokalnych?
-    2. "sentiment" (float -1.0 do 1.0): Wydźwięk emocjonalny.
-    3. "location" (string lub null): Najbardziej precyzyjna nazwa miejsca (Miasto, Wieś, Dzielnica, Ulica, Jezioro itp.).
-       - Musi być w MIANOWNIKU.
-       - Jeśli brak konkretnej lokalizacji -> null.
+    if(region_name.lower() == "polska"):
+        system_prompt = f"""
+        Jesteś analitykiem mediów w Polsce.
+        Zwróć JSON z 3 polami:
+        1. "detected_region" (string lub null): Nazwa województwa (małą literą), jeśli news dotyczy konkretnego regionu Polski.
+        - Wybierz z listy: {str(VALID_REGIONS)}.
+        - Jeśli nie dotyczy konkretnego regionu lub dotyczy całej Polski -> null.
+        2. "location" (string lub null): Precyzyjna nazwa miejsca, tak, aby można było użyć na nim geolokalizacji (np. używając biblioteki geopy).
+        - Jeśli brak konkretnej lokalizacji -> null.
+        3. "sentiment" (float -1.0 do 1.0): Wydźwięk emocjonalny.
 
-    Przykład: {{ "relevance": 0.9, "sentiment": -0.5, "location": "Giewont" }}
-    """
+        Przykład: {{ "detected_region": "małopolskie", "location": "Giewont", "sentiment": -0.5 }}
+        """
+    else:
+        system_prompt = f"""
+        Jesteś analitykiem mediów dla regionu: {region_name}.
+        Zwróć JSON z 4 polami:
+        1. "relevance" (float 0.0 do 1.0): Jak bardzo dotyczy to spraw lokalnych?
+        2. "sentiment" (float -1.0 do 1.0): Wydźwięk emocjonalny.
+        3. "detected_region" (string lub null): Nazwa województwa (małą literą), jeśli news dotyczy konkretnego regionu Polski.
+        - Wybierz z listy: {str(VALID_REGIONS)}.
+        - Jeśli nie dotyczy konkretnego regionu lub dotyczy całej Polski -> null.
+        4. "location" (string lub null): Precyzyjna nazwa miejsca, tak, aby można było użyć na nim geolokalizacji (np. używając biblioteki geopy).
+        - Jeśli brak konkretnej lokalizacji -> null.
+
+        Przykład: {{ "relevance": 0.9, "sentiment": -0.5, "detected_region": "małopolskie", "location": "Giewont" }}
+        """
 
     try:
         response = client.chat.completions.create(
@@ -76,7 +92,7 @@ def analyze_with_gpt(text, region_name):
         return json.loads(response.choices[0].message.content)
     except Exception as e:
         print(f"Błąd analizy: {e}")
-        return {"relevance": 0.0, "sentiment": 0.0, "location": None}
+        return {"relevance": 0.0, "sentiment": 0.0, "location": None, "detected_region": None}
 
 def get_label_from_score(score):
     if score <= -0.5: return "very negative"
@@ -140,10 +156,15 @@ def sync_logic():
             region = feed.get("region", "Polska")
             analysis = analyze_with_gpt(full_text, region)
             
-            relevance = analysis.get("relevance", 0.0)
+            relevance = analysis.get("relevance", 1.0)
             temperature = analysis.get("sentiment", 0.0)
             label = get_label_from_score(temperature)
             detected_location = analysis.get("location")
+            detected_region = analysis.get("detected_region")
+
+            final_region = region
+            if region == "Polska" and detected_region in VALID_REGIONS:
+                final_region = detected_region
             
             # Parsowanie daty
             published_struct = entry.get('published_parsed') or entry.get('updated_parsed')
@@ -170,7 +191,7 @@ def sync_logic():
                 "published": final_iso_date,
                 "summary": clean_summary_text,
                 "source": feed.get("name", "Nieznane źródło"),
-                "region": feed.get("region", "Polska"),
+                "region": final_region,
                 "category": feed.get("category", "Ogólne"),
                 "sentiment_label": label,
                 "temperature": temperature,
