@@ -53,16 +53,14 @@ HTML_TAGS_PATTERN = re.compile('<.*?>')
 def analyze_with_gpt(text, region_name):
     system_prompt = f"""
     Jesteś analitykiem mediów dla regionu: {region_name}.
-    Twoim zadaniem jest ocena dwóch parametrów:
-    1. RELEVANCE (0.0 do 1.0): Jak bardzo ten artykuł dotyczy konkretnie spraw lokalnych tego regionu?
-       - 1.0: Ściśle lokalne (np. wypadek w centrum miasta, lokalne wybory, budowa drogi w powiecie).
-       - 0.5: Dotyczy regionu, ale też całego kraju (np. skutki nowej ustawy dla rolników z regionu).
-       - 0.1: Ogólnopolskie/Światowe, słaby związek z regionem.
-       - 0.0: Zupełnie nietrafione (np. news z innego województwa).
+    Zwróć JSON z 3 polami:
+    1. "relevance" (float 0.0 do 1.0): Jak bardzo dotyczy to spraw lokalnych?
+    2. "sentiment" (float -1.0 do 1.0): Wydźwięk emocjonalny.
+    3. "location" (string lub null): Najbardziej precyzyjna nazwa miejsca (Miasto, Wieś, Dzielnica, Ulica, Jezioro itp.).
+       - Musi być w MIANOWNIKU.
+       - Jeśli brak konkretnej lokalizacji -> null.
 
-    2. SENTIMENT (od -1.0 (negatywny) do 1.0 (pozytywny)): Wydźwięk emocjonalny tekstu.
-
-    Zwróć TYLKO JSON: {{ "relevance": float, "sentiment": float }}
+    Przykład: {{ "relevance": 0.9, "sentiment": -0.5, "location": "Giewont" }}
     """
 
     try:
@@ -78,7 +76,7 @@ def analyze_with_gpt(text, region_name):
         return json.loads(response.choices[0].message.content)
     except Exception as e:
         print(f"Błąd analizy: {e}")
-        return {"relevance": 0.0, "sentiment": 0.0}
+        return {"relevance": 0.0, "sentiment": 0.0, "location": None}
 
 def get_label_from_score(score):
     if score <= -0.5: return "very negative"
@@ -138,12 +136,16 @@ def sync_logic():
             clean_summary_text = clean_html(raw_summary)
             full_text = f"{entry.title}. {clean_summary_text}"
 
-            analysis = analyze_with_gpt(full_text, feed.get("region", "Polska"))
+            # Analiza AI
+            region = feed.get("region", "Polska")
+            analysis = analyze_with_gpt(full_text, region)
             
             relevance = analysis.get("relevance", 0.0)
             temperature = analysis.get("sentiment", 0.0)
             label = get_label_from_score(temperature)
-
+            detected_location = analysis.get("location")
+            
+            # Parsowanie daty
             published_struct = entry.get('published_parsed') or entry.get('updated_parsed')
             
             final_iso_date = None
@@ -172,14 +174,15 @@ def sync_logic():
                 "category": feed.get("category", "Ogólne"),
                 "sentiment_label": label,
                 "temperature": temperature,
-                "local_relevance": relevance
+                "local_relevance": relevance,
+                "location_name": detected_location,
             }
             
             try:
                 supabase.table("news").insert(new_record).execute()
+                count_new += 1
             except Exception as e:
                 print(f"Błąd zapisu: {e}")
-            count_new += 1
             
     print(f"--- KONIEC: Dodano {count_new} nowych artykułów ---")
     return {"status": "success", "added": count_new}
@@ -207,10 +210,7 @@ def read_rss():
 @app.get("/map-data")
 def read_map_data():
     """Endpoint dla widoku MAPY"""
-
-    cutoff_date = datetime.now(timezone.utc) - timedelta(hours=48)
-    cutoff_str = cutoff_date.isoformat()
-
+    cutoff_str = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
     try:
         response = supabase.table("news").select("*").gte("published", cutoff_str).execute()
         news_list = response.data
@@ -227,7 +227,8 @@ def read_map_data():
         
         if key in region_stats:
             temp = item.get('temperature', 0.0)
-            weight = item.get('relevance', 1.0) 
+            weight = item.get('local_relevance')
+            if weight is None: weight = 1.0
             
             region_stats[key]["weighted_sum"] += (temp * weight)
             region_stats[key]["total_weight"] += weight
