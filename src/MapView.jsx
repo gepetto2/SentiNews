@@ -271,7 +271,14 @@ export default function MapView({ onBack }) {
               ✕
             </button>
 
-            <div style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4 }}>
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 600,
+                textAlign: "center",
+                marginBottom: 4,
+              }}
+            >
               {selectedName}
             </div>
 
@@ -292,30 +299,66 @@ export default function MapView({ onBack }) {
             </div>
 
             {selectedNews && selectedNews.length > 0 ? (
-              <div style={{ marginTop: 12, borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: "#374151" }}>
+              <div
+                style={{
+                  marginTop: 12,
+                  borderTop: "1px solid #e5e7eb",
+                  paddingTop: 12,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    marginBottom: 8,
+                    color: "#374151",
+                  }}
+                >
                   Najważniejsze newsy:
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
                   {selectedNews.map((news, i) => (
-                    <div
+                    <a
                       key={i}
-                      style={{
-                        fontSize: 13,
-                        color: "#4b5563",
-                        background: "#f9fafb",
-                        padding: "8px",
-                        borderRadius: "8px",
-                        border: "1px solid #f3f4f6",
-                      }}
+                      href={news.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: "none" }}
                     >
-                      <div style={{ fontWeight: 500, marginBottom: 2 }}>{news.title}</div>
-                    </div>
-                  ))}
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "#4b5563",
+                          background: "#f9fafb",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          border: "1px solid #f3f4f6",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ fontWeight: 500, marginBottom: 2 }}>
+                          {news.title}
+                        </div>
+                      </div>
+                    </a>
+                  ))}{" "}
                 </div>
               </div>
             ) : (
-              <div style={{ marginTop: 10, textAlign: "center", fontSize: 13, color: "#9ca3af" }}>
+              <div
+                style={{
+                  marginTop: 10,
+                  textAlign: "center",
+                  fontSize: 13,
+                  color: "#9ca3af",
+                }}
+              >
                 Brak wyróżnionych newsów dla tego regionu.
               </div>
             )}

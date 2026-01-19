@@ -91,35 +91,37 @@ export default function NewsListView({ onBack }) {
 
         {!loading &&
           filteredNews.map((item, i) => (
-            <div key={i} className="uiCard newsItem">
-              <div className="newsTitleRow">
-                <div className="newsTitle">{item.title}</div>
+            <a key={i} href={item.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="uiCard newsItem">
+                <div className="newsTitleRow">
+                  <div className="newsTitle">{item.title}</div>
+                </div>
+
+                <div className="newsSummary">{item.summary}</div>
+
+                {/* TYLKO PO LEWEJ (jak było): Sentiment + Temp */}
+                <div className="newsMetaRow">
+                  <span className="uiPill">
+                    Sentiment: {item.sentiment_label ?? "Brak"}
+                  </span>
+
+                  <span className="uiPill">
+                    Region: {item.region ?? "Brak"}
+                  </span>
+
+                  <span className="uiPill">
+                    Kategoria: {item.category ?? "Brak"}
+                  </span>
+
+                  <span className="uiPill">
+                    Temp:{" "}
+                    {item.temperature !== undefined && item.temperature !== null
+                      ? Number(item.temperature).toFixed(2)
+                      : "Brak danych"}
+                  </span>
+                </div>
               </div>
-
-              <div className="newsSummary">{item.summary}</div>
-
-              {/* TYLKO PO LEWEJ (jak było): Sentiment + Temp */}
-              <div className="newsMetaRow">
-                <span className="uiPill">
-                  Sentiment: {item.sentiment_label ?? "Brak"}
-                </span>
-
-                <span className="uiPill">
-                  Region: {item.region ?? "Brak"}
-                </span>
-
-                <span className="uiPill">
-                  Kategoria: {item.category ?? "Brak"}
-                </span>
-
-                <span className="uiPill">
-                  Temp:{" "}
-                  {item.temperature !== undefined && item.temperature !== null
-                    ? Number(item.temperature).toFixed(2)
-                    : "Brak danych"}
-                </span>
-              </div>
-            </div>
+            </a>
           ))}
       </div>
     </div>

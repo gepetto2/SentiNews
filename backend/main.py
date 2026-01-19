@@ -36,6 +36,8 @@ VALID_REGIONS = [
     "wielkopolskie", "zachodniopomorskie"
 ]
 
+HOURS_LIMIT = 72
+
 app = FastAPI()
 
 app.add_middleware(
@@ -231,7 +233,7 @@ def read_rss():
 @app.get("/map-data")
 def read_map_data():
     """Endpoint dla widoku MAPY"""
-    cutoff_str = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
+    cutoff_str = (datetime.now(timezone.utc) - timedelta(hours=HOURS_LIMIT)).isoformat()
     try:
         response = supabase.table("news").select("*").gte("published", cutoff_str).execute()
         news_list = response.data
@@ -256,6 +258,7 @@ def read_map_data():
             
             region_stats[region_name]["items"].append({
                 "title": item.get("title"),
+                "link": item.get("link"),
                 "temperature": temp,
                 "relevance": weight
             })
