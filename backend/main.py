@@ -239,28 +239,40 @@ def read_map_data():
         print(f"Błąd pobierania danych dla mapy: {e}")
         news_list = []
     
-    region_stats = {region: {"weighted_sum": 0.0, "total_weight": 0.0} for region in VALID_REGIONS}
+    region_stats = {region: {"weighted_sum": 0.0, "total_weight": 0.0, "items": []} for region in VALID_REGIONS}
     
     for item in news_list:
         r = item.get('region')
         if not r: continue
-        key = r.lower().strip()
+        region_name = r.lower().strip()
         
-        if key in region_stats:
+        if region_name in region_stats:
             temp = item.get('temperature', 0.0)
             weight = item.get('local_relevance')
             if weight is None: weight = 1.0
             
-            region_stats[key]["weighted_sum"] += (temp * weight)
-            region_stats[key]["total_weight"] += weight
+            region_stats[region_name]["weighted_sum"] += (temp * weight)
+            region_stats[region_name]["total_weight"] += weight
+            
+            region_stats[region_name]["items"].append({
+                "title": item.get("title"),
+                "temperature": temp,
+                "relevance": weight
+            })
 
-    regional_averages = {}
+    regional_data = {}
     for region in VALID_REGIONS:
         stats = region_stats[region]
+        avg = None
         if stats["total_weight"] > 0:
             avg = stats["weighted_sum"] / stats["total_weight"]
-            regional_averages[region] = round(avg, 2)
-        else:
-            regional_averages[region] = None
+            avg = round(avg, 2)
+            
+        top_news = sorted(stats["items"], key=lambda x: (x['relevance'], abs(x['temperature'] * x['relevance'])), reverse=True)[:5]
 
-    return regional_averages
+        regional_data[region] = {
+            "temperature": avg,
+            "news": top_news
+        }
+
+    return regional_data

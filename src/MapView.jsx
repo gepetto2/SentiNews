@@ -35,7 +35,8 @@ export default function MapView({ onBack }) {
 
   const styleFeature = (feature) => {
     const name = feature.properties.nazwa;
-    const temperature = sentimentData[name];
+    const regionData = sentimentData[name.toLowerCase()];
+    const temperature = regionData ? regionData.temperature : null;
     const fillColor = getColorForTemperature(temperature);
     const isSelected = name === selectedName;
 
@@ -61,10 +62,12 @@ export default function MapView({ onBack }) {
     });
   };
 
-  const selectedTemp = selectedName
+  const selectedData = selectedName
     ? sentimentData[selectedName.toLowerCase()]
     : null;
 
+  const selectedTemp = selectedData ? selectedData.temperature : null;
+  const selectedNews = selectedData ? selectedData.news : [];
  
   const cardStyle = {
      borderRadius: "14px",
@@ -220,33 +223,105 @@ export default function MapView({ onBack }) {
         </div>
       )}
 
-      {/* BOTTOM CARD */}
-      <div
-        style={{
-          position: "absolute",
-          left: 14,
-          right: 14,
-          bottom: 14,
-          padding: "12px 14px",
-          zIndex: 1000,
-          textAlign: "center",
-          ...cardStyle,
-        }}
-      >
-        <div style={{ fontSize: 16, fontWeight: 400 }}>
-          {selectedName ? `Wybrano: ${selectedName}` : "Kliknij województwo"}
-        </div>
+      {/* MODAL POPUP */}
+      {selectedName && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.3)",
+            backdropFilter: "blur(2px)",
+          }}
+          onClick={() => setSelectedName(null)}
+        >
+          <div
+            style={{
+              ...cardStyle,
+              background: "#fff",
+              width: "90%",
+              maxWidth: "420px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              position: "relative",
+              maxHeight: "80vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedName(null)}
+              style={{
+                position: "absolute",
+                top: 14,
+                right: 14,
+                border: "none",
+                background: "transparent",
+                fontSize: "20px",
+                cursor: "pointer",
+                color: "#9ca3af",
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
 
-        <div style={{ fontSize: 13, color: "#555", marginTop: 2 }}>
-          {selectedName
-            ? `Temperatura: ${
-                selectedTemp !== null && selectedTemp !== undefined
+            <div style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4 }}>
+              {selectedName}
+            </div>
+
+            <div style={{ fontSize: 15, color: "#555", textAlign: "center" }}>
+              Temperatura nastrojów:{" "}
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: getColorForTemperature(selectedTemp),
+                  fontSize: 18,
+                  marginLeft: 4,
+                }}
+              >
+                {selectedTemp !== null && selectedTemp !== undefined
                   ? selectedTemp.toFixed(2)
-                  : "Brak danych"
-              }`
-            : "Wybierz region, żeby zobaczyć wynik."}
+                  : "Brak danych"}
+              </span>
+            </div>
+
+            {selectedNews && selectedNews.length > 0 ? (
+              <div style={{ marginTop: 12, borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: "#374151" }}>
+                  Najważniejsze newsy:
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {selectedNews.map((news, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        fontSize: 13,
+                        color: "#4b5563",
+                        background: "#f9fafb",
+                        padding: "8px",
+                        borderRadius: "8px",
+                        border: "1px solid #f3f4f6",
+                      }}
+                    >
+                      <div style={{ fontWeight: 500, marginBottom: 2 }}>{news.title}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ marginTop: 10, textAlign: "center", fontSize: 13, color: "#9ca3af" }}>
+                Brak wyróżnionych newsów dla tego regionu.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
