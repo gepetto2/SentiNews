@@ -1,119 +1,17 @@
 import { useEffect, useState } from "react";
 import { MapContainer, GeoJSON } from "react-leaflet";
-import chroma from "chroma-js";
 import "leaflet/dist/leaflet.css";
-
-const colorScale = chroma.scale(['#dc2626', '#f3f4f6', '#16a34a'])
-    .domain([-1, 0, 1]) 
-    .mode('lch');
-
-const getColorForTemperature = (temp) => {
-  if (temp === undefined || temp === null) return "#e5e7eb";
-
-  return colorScale(temp).hex();
-};
-
-const BACKGROUND_STYLE = {
-  position: "absolute",
-  inset: 0,
-  background:
-    "radial-gradient(1200px 600px at 20% 10%, rgba(147,197,253,0.35), transparent 60%), radial-gradient(900px 500px at 80% 80%, rgba(253,186,116,0.30), transparent 55%), linear-gradient(180deg, rgba(243,244,246,1) 0%, rgba(249,250,251,1) 100%)",
-  zIndex: 0,
-};
-
-const cardStyle = {
-  borderRadius: "14px",
-  background: "#f6f6f6",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.10)",
-  border: "1px solid rgba(0,0,0,0.14)",
-  fontWeight: 400,
-};
-
-const RegionModal = ({ selectedName, selectedTemp, selectedNews, onClose }) => {
-  if (!selectedName) return null;
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: 2000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(0,0,0,0.3)",
-        backdropFilter: "blur(2px)",
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          ...cardStyle,
-          background: "#fff",
-          width: "90%",
-          maxWidth: "420px",
-          padding: "24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          position: "relative",
-          maxHeight: "80vh",
-          overflowY: "auto",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute",
-            top: 14,
-            right: 14,
-            border: "none",
-            background: "transparent",
-            fontSize: "20px",
-            cursor: "pointer",
-            color: "#9ca3af",
-            lineHeight: 1,
-          }}
-        >
-          ✕
-        </button>
-
-        <div style={{ fontSize: 22, fontWeight: 600, textAlign: "center", marginBottom: 4 }}>
-          {selectedName}
-        </div>
-
-        <div style={{ fontSize: 15, color: "#555", textAlign: "center" }}>
-          Temperatura nastrojów:{" "}
-          <span style={{ fontWeight: 700, color: getColorForTemperature(selectedTemp), fontSize: 18, marginLeft: 4 }}>
-            {selectedTemp !== null && selectedTemp !== undefined ? selectedTemp.toFixed(2) : "Brak danych"}
-          </span>
-        </div>
-
-        {selectedNews && selectedNews.length > 0 ? (
-          <div style={{ marginTop: 12, borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: "#374151" }}>
-              Najważniejsze newsy:
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {selectedNews.map((news, i) => (
-                <a key={i} href={news.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                  <div style={{ fontSize: 13, color: "#4b5563", background: "#f9fafb", padding: "8px", borderRadius: "8px", border: "1px solid #f3f4f6", cursor: "pointer" }}>
-                    <div style={{ fontWeight: 500, marginBottom: 2 }}>{news.title}</div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div style={{ marginTop: 10, textAlign: "center", fontSize: 13, color: "#9ca3af" }}>
-            Brak wyróżnionych newsów dla tego regionu.
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+import {
+  Box,
+  Button,
+  Paper,
+  Typography,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import RegionModal from "./components/RegionModal";
+import { getColorForTemperature } from "./utils/colors";
 
 export default function MapView({ onBack }) {
   const [geo, setGeo] = useState(null);
@@ -170,19 +68,26 @@ export default function MapView({ onBack }) {
 
   const selectedTemp = selectedData ? selectedData.temperature : null;
   const selectedNews = selectedData ? selectedData.news : [];
- 
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         height: "100vh",
         position: "relative",
-        fontWeight: 400,
-        background: "#f3f4f6", // pastelowe tło strony (poza samą mapą)
+        bgcolor: "#f3f4f6",
         overflow: "hidden",
       }}
     >
       {/* Pastelowe tło mapy (pod kafelkami Leaflet) */}
-      <div style={BACKGROUND_STYLE} />
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          background:
+            "radial-gradient(1200px 600px at 20% 10%, rgba(147,197,253,0.35), transparent 60%), radial-gradient(900px 500px at 80% 80%, rgba(253,186,116,0.30), transparent 55%), linear-gradient(180deg, rgba(243,244,246,1) 0%, rgba(249,250,251,1) 100%)",
+        }}
+      />
 
       <MapContainer
         center={[52, 19]}
@@ -206,107 +111,61 @@ export default function MapView({ onBack }) {
       </MapContainer>
 
       {/* TOP BAR */}
-      <div
-        style={{
+      <Paper
+        elevation={3}
+        sx={{
           position: "absolute",
           top: 14,
           left: 14,
           right: 14,
-          height: "52px",
+          height: 52,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 12px",
+          px: 2,
           zIndex: 1000,
-          fontSize: "16px",
-          ...cardStyle,
+          borderRadius: 3,
         }}
       >
-        <button
+        <Button
           onClick={onBack}
-          style={{
-            border: "1px solid rgba(0,0,0,0.14)",
-            background: "#e5e7eb",
-            borderRadius: "12px",
-            padding: "8px 12px",
-            cursor: "pointer",
-            fontWeight: 400,
-            fontSize: "16px",
-          }}
+          variant="outlined"
+          size="small"
+          sx={{ borderRadius: 3, textTransform: "none" }}
         >
           Wróć
-        </button>
-
-        <div style={{ fontWeight: 400, fontSize: "16px" }}>Mapa nastrojów</div>
-
-        <button
-          onClick={() => setIsInfoOpen((prev) => !prev)}
-          style={{
-            border: "1px solid rgba(0,0,0,0.14)",
-            background: "#e5e7eb",
-            borderRadius: "12px",
-            width: "42px",
-            height: "38px",
-            cursor: "pointer",
-            fontWeight: 400,
-            fontSize: "16px",
-          }}
-          aria-label="Informacje"
-          title="Informacje"
-        >
-          ℹ️
-        </button>
-      </div>
+        </Button>
+        <Typography variant="subtitle1" fontWeight={500}>
+          Mapa nastrojów
+        </Typography>
+        <Tooltip title="Informacje">
+          <IconButton onClick={() => setIsInfoOpen(!isInfoOpen)}>
+            <InfoIcon />
+          </IconButton>
+        </Tooltip>
+      </Paper>
 
       {/* INFO */}
       {isInfoOpen && (
-        <div
-          style={{
+        <Paper
+          sx={{
             position: "absolute",
             top: 76,
             right: 14,
-            width: "360px",
-            maxWidth: "calc(100% - 28px)",
-            padding: "14px 16px",
+            width: 300,
+            p: 2,
             zIndex: 1000,
-            fontSize: "14px",
-            ...cardStyle,
+            borderRadius: 3,
           }}
+          elevation={4}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              marginBottom: 8,
-            }}
-          >
-            <div style={{ fontWeight: 400, fontSize: "16px" }}>O SentiNews</div>
-            <button
-              onClick={() => setIsInfoOpen(false)}
-              style={{
-                border: "1px solid rgba(0,0,0,0.14)",
-                background: "#f6f6f6",
-                borderRadius: "12px",
-                width: 34,
-                height: 34,
-                cursor: "pointer",
-                fontSize: 16,
-                lineHeight: 1,
-                fontWeight: 400,
-              }}
-              aria-label="Zamknij"
-              title="Zamknij"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div style={{ fontSize: 14, color: "#333", lineHeight: 1.45 }}>
+          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+            O SentiNews
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             Kliknij województwo, aby zobaczyć “temperaturę” nastroju.
-          </div>
-        </div>
+          </Typography>
+        </Paper>
       )}
 
       {/* MODAL POPUP */}
@@ -316,6 +175,6 @@ export default function MapView({ onBack }) {
         selectedNews={selectedNews}
         onClose={() => setSelectedName(null)}
       />
-    </div>
+    </Box>
   );
 }
