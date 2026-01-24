@@ -17,8 +17,11 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
+  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import NewsCard from "./components/NewsCard";
 
 export default function NewsListView({ onBack }) {
@@ -32,7 +35,10 @@ export default function NewsListView({ onBack }) {
 
   // Nowe funkcjonalności
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("published_desc");
+  const [sortConfig, setSortConfig] = useState({
+    key: "published",
+    direction: "desc",
+  });
 
   // Paginacja
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,7 +65,7 @@ export default function NewsListView({ onBack }) {
   // Resetowanie strony przy zmianie filtrów
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterSentiment, filterRegion, filterCategory, sortBy]);
+  }, [searchQuery, filterSentiment, filterRegion, filterCategory, sortConfig]);
 
   // Przetwarzanie danych (filtrowanie + sortowanie)
   const processedNews = useMemo(() => {
@@ -86,28 +92,30 @@ export default function NewsListView({ onBack }) {
     });
 
     // 2. Sortowanie
-    if (sortBy === "temp_desc") {
-      filtered.sort(
-        (a, b) => (Number(b.temperature) || 0) - (Number(a.temperature) || 0),
-      );
-    } else if (sortBy === "temp_asc") {
-      filtered.sort(
-        (a, b) => (Number(a.temperature) || 0) - (Number(b.temperature) || 0),
-      );
-    } else if (sortBy === "published_desc") {
-      filtered.sort(
-        (a, b) =>
-          new Date(b.published || b.pubDate || 0) -
-          new Date(a.published || a.pubDate || 0),
-      );
-    } else if (sortBy === "published_asc") {
-      filtered.sort(
-        (a, b) =>
-          new Date(a.published || a.pubDate || 0) -
-          new Date(b.published || b.pubDate || 0),
-      );
+    const { key, direction } = sortConfig;
+    if (key) {
+      filtered.sort((a, b) => {
+        let valA, valB;
+
+        if (key === "temp") {
+          valA = Number(a.temperature) || 0;
+          valB = Number(b.temperature) || 0;
+        } else if (key === "published") {
+          valA = new Date(a.published || a.pubDate || 0);
+          valB = new Date(b.published || b.pubDate || 0);
+        } else {
+          return 0; // Nie sortuj dla nieznanego klucza
+        }
+
+        if (valA < valB) {
+          return direction === "asc" ? -1 : 1;
+        }
+        if (valA > valB) {
+          return direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
     }
-    // "default" zostawiamy bez zmian (kolejność z API)
 
     return filtered;
   }, [
@@ -116,7 +124,7 @@ export default function NewsListView({ onBack }) {
     filterSentiment,
     filterRegion,
     filterCategory,
-    sortBy,
+    sortConfig,
   ]);
 
   // Paginacja - wycinek danych
@@ -130,7 +138,10 @@ export default function NewsListView({ onBack }) {
   const sentiments = [
     ...new Set(newsList.map((n) => n.sentiment_label).filter(Boolean)),
   ];
-  const regions = [...new Set(newsList.map((n) => n.region).filter(Boolean))];
+  const regions = [...new Set(newsList.map((n) => n.region).filter(Boolean))]
+    .filter((region) => region !== "Polska")
+    .sort();
+
   const categories = [
     ...new Set(newsList.map((n) => n.category).filter(Boolean)),
   ];
@@ -167,32 +178,49 @@ export default function NewsListView({ onBack }) {
                 <TextField
                   label="Szukaj"
                   variant="outlined"
-                  fullWidth
                   size="small"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{ flexGrow: 1 }}
                 />
-                <FormControl fullWidth size="small">
-                  <InputLabel>Sortowanie</InputLabel>
-                  <Select
-                    value={sortBy}
-                    label="Sortowanie"
-                    onChange={(e) => setSortBy(e.target.value)}
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ minWidth: { sm: 240 } }}
+                >
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Sortuj według</InputLabel>
+                    <Select
+                      value={sortConfig.key}
+                      label="Sortuj według"
+                      onChange={(e) =>
+                        setSortConfig({
+                          key: e.target.value,
+                          direction: "desc",
+                        })
+                      }
+                    >
+                      <MenuItem value="published">Data publikacji</MenuItem>
+                      <MenuItem value="temp">Temperatura</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <IconButton
+                    onClick={() =>
+                      setSortConfig((prev) => ({
+                        ...prev,
+                        direction: prev.direction === "asc" ? "desc" : "asc",
+                      }))
+                    }
+                    aria-label="zmień kierunek sortowania"
                   >
-                    <MenuItem value="published_desc">
-                      Data publikacji (od najnowszych)
-                    </MenuItem>
-                    <MenuItem value="published_asc">
-                      Data publikacji (od najstarszych)
-                    </MenuItem>
-                    <MenuItem value="temp_desc">
-                      Temperatura (od najwyższej)
-                    </MenuItem>
-                    <MenuItem value="temp_asc">
-                      Temperatura (od najniższej)
-                    </MenuItem>
-                  </Select>
-                </FormControl>
+                    {sortConfig.direction === "asc" ? (
+                      <ArrowUpwardIcon />
+                    ) : (
+                      <ArrowDownwardIcon />
+                    )}
+                  </IconButton>
+                </Stack>
               </Stack>
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

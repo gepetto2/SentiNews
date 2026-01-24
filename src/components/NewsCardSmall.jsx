@@ -1,19 +1,31 @@
 import { Card, CardContent, Link, Typography } from "@mui/material";
+import chroma from "chroma-js";
+import { getColorForTemperature } from "../utils/colors";
 
 export default function NewsCardSmall({ news }) {
+  const sentimentColor = getColorForTemperature(news.temperature);
+  const textColor = chroma(sentimentColor).luminance() > 0.4 ? "#000" : "#fff";
+
   return (
-    <Card variant="outlined" sx={{ bgcolor: "#f9fafb" }}>
+    <Card variant="outlined" sx={{ bgcolor: sentimentColor, border: "none" }}>
       <CardContent
-        sx={{ p: "12px !important", "&:last-child": { pb: "12px !important" } }}
+        sx={{
+          p: "10px 14px !important",
+          "&:last-child": { pb: "10px !important" },
+        }}
       >
         <Link
           href={news.link}
           target="_blank"
           rel="noopener"
           underline="hover"
-          color="text.primary"
+          sx={{ color: textColor, display: "block" }}
         >
-          <Typography variant="body2" fontWeight={500}>
+          <Typography
+            variant="body2"
+            fontWeight={500}
+            sx={{ color: textColor }}
+          >
             {news.title}
           </Typography>
         </Link>
