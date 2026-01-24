@@ -22,7 +22,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import NewsCard from "./components/NewsCard";
+import NewsCard from "../components/NewsCard";
 
 export default function NewsListView({ onBack }) {
   const [newsList, setNewsList] = useState([]);

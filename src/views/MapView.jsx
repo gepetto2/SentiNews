@@ -10,8 +10,8 @@ import {
   Tooltip,
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
-import RegionModal from "./components/RegionModal";
-import { getColorForTemperature } from "./utils/colors";
+import RegionModal from "../components/RegionModal";
+import { getColorForTemperature } from "../utils/colors";
 
 export default function MapView({ onBack }) {
   const [geo, setGeo] = useState(null);
