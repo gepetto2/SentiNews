@@ -1,4 +1,6 @@
-export default function HomeView({ setScreen }) {
+import { Link } from "react-router-dom";
+
+export default function HomeView() {
   return (
     <div className="home">
       <div className="homeCard">
@@ -7,12 +9,12 @@ export default function HomeView({ setScreen }) {
         </div>
 
         <div className="actions">
-          <button className="primaryBtn" onClick={() => setScreen("map")}>
-            Mapa
-          </button>
-          <button className="primaryBtn" onClick={() => setScreen("news")}>
-            Lista newsów
-          </button>
+          <Link to="/map">
+            <button className="primaryBtn">Mapa</button>
+          </Link>
+          <Link to="/news">
+            <button className="primaryBtn">Lista newsów</button>
+          </Link>
         </div>
       </div>
     </div>

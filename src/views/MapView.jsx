@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { MapContainer, GeoJSON, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -10,10 +11,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RegionModal from "../components/RegionModal";
 import { getColorForTemperature } from "../utils/colors";
 
-export default function MapView({ onBack }) {
+export default function MapView() {
   const [geo, setGeo] = useState(null);
   const [sentimentData, setSentimentData] = useState({});
   const [selectedName, setSelectedName] = useState(null);
@@ -127,10 +129,16 @@ export default function MapView({ onBack }) {
         }}
       >
         <Button
-          onClick={onBack}
+          component={Link}
+          to="/"
           variant="outlined"
           size="small"
-          sx={{ borderRadius: 3, textTransform: "none" }}
+          startIcon={<ArrowBackIcon />}
+          sx={{
+            bgcolor: "white",
+            borderRadius: 3,
+            textTransform: "none",
+          }}
         >
           Wróć
         </Button>

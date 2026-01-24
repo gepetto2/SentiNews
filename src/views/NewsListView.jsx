@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   Box,
   Container,
@@ -24,7 +25,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import NewsCard from "../components/NewsCard";
 
-export default function NewsListView({ onBack }) {
+export default function NewsListView() {
   const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -157,10 +158,12 @@ export default function NewsListView({ onBack }) {
           mb={3}
         >
           <Button
+            component={Link}
+            to="/"
             startIcon={<ArrowBackIcon />}
-            onClick={onBack}
             variant="outlined"
-            sx={{ bgcolor: "white", borderRadius: 2, textTransform: "none" }}
+            size="small"
+            sx={{ bgcolor: "white", borderRadius: 3, textTransform: "none" }}
           >
             Wróć
           </Button>
