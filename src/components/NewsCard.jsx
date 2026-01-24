@@ -6,10 +6,22 @@ import {
   Stack,
   Chip,
 } from "@mui/material";
+import chroma from "chroma-js";
 import { getColorForTemperature } from "../utils/colors";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import EventIcon from "@mui/icons-material/Event";
 
 export default function NewsCard({ item }) {
   const tempColor = getColorForTemperature(item.temperature);
+  const textColor = chroma(tempColor).luminance() > 0.4 ? "#000" : "#fff";
+
+  const formattedDate = item.published
+    ? new Date(item.published).toLocaleDateString("pl-PL", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
   return (
     <Card
       sx={{
@@ -28,7 +40,13 @@ export default function NewsCard({ item }) {
             variant="body2"
             color="text.secondary"
             paragraph
-            sx={{ mb: 2 }}
+            sx={{
+              mb: 2,
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 3,
+              overflow: "hidden",
+            }}
           >
             {item.summary}
           </Typography>
@@ -48,7 +66,16 @@ export default function NewsCard({ item }) {
                 variant="outlined"
               />
             )}
-            {item.region && <Chip label={`📍 ${item.region}`} size="small" />}
+            {item.region && (
+              <Chip
+                icon={<LocationOnIcon />}
+                label={item.region}
+                size="small"
+              />
+            )}
+            {formattedDate && (
+              <Chip icon={<EventIcon />} label={formattedDate} size="small" />
+            )}
             {item.category && (
               <Chip
                 label={item.category}
@@ -58,9 +85,9 @@ export default function NewsCard({ item }) {
               />
             )}
             <Chip
-              label={`Temp: ${item.temperature !== undefined ? Number(item.temperature).toFixed(2) : "-"}`}
+              label={`Temp: ${item.temperature !== undefined ? Number(item.temperature*10).toFixed(2) : "-"}`}
               size="small"
-              sx={{ bgcolor: tempColor, color: "#fff", fontWeight: "bold" }}
+              sx={{ bgcolor: tempColor, color: textColor, fontWeight: "bold" }}
             />
           </Stack>
         </CardContent>
