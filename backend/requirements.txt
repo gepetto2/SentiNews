@@ -1,7 +1,8 @@
-fastapi==0.128.0
-feedparser==6.0.12
-openai==2.15.0
-python-dotenv==1.2.1
+fastapi
+feedparser
+openai
+python-dotenv
 uvicorn
-python_dateutil==2.9.0.post0
-supabase==2.27.2
+python_dateutil
+supabase
+geopy
