@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapContainer, GeoJSON } from "react-leaflet";
+import { MapContainer, GeoJSON, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   Box,
@@ -78,35 +78,28 @@ export default function MapView({ onBack }) {
         overflow: "hidden",
       }}
     >
-      {/* Pastelowe tło mapy (pod kafelkami Leaflet) */}
-      <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 0,
-          background:
-            "radial-gradient(1200px 600px at 20% 10%, rgba(147,197,253,0.35), transparent 60%), radial-gradient(900px 500px at 80% 80%, rgba(253,186,116,0.30), transparent 55%), linear-gradient(180deg, rgba(243,244,246,1) 0%, rgba(249,250,251,1) 100%)",
-        }}
-      />
-
       <MapContainer
         center={[52, 19]}
         zoom={6}
         style={{
           height: "100%",
           width: "100%",
-          background: "transparent",
+          background: "#f3f4f6",
           zIndex: 1,
         }}
         zoomControl={false}
-        attributionControl={false}
+        attributionControl={true}
         minZoom={6}
-        maxZoom={7}
+        maxZoom={8}
         maxBounds={[
           [46, 12], // [południe, zachód]
           [57, 25], // [północ, wschód]
         ]}
       >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+        />
         {geo && (
           <GeoJSON
             data={geo}

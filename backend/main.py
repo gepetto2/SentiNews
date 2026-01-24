@@ -11,6 +11,8 @@ import json
 from datetime import datetime, timedelta, timezone
 import time
 from dateutil import parser
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 # Ładowanie zmiennych z .env
 load_dotenv()
@@ -28,6 +30,8 @@ if SUPABASE_URL and SUPABASE_KEY:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 else:
     print("UWAGA: Brak zmiennych SUPABASE_URL/KEY w pliku .env")
+
+geolocator = Nominatim(user_agent="senti-news-app")
 
 VALID_REGIONS = [
     "dolnośląskie", "kujawsko-pomorskie", "lubelskie", "lubuskie", "łódzkie", 
@@ -70,7 +74,7 @@ def analyze_with_gpt(text, region_name):
         system_prompt = f"""
         Jesteś analitykiem mediów dla regionu: {region_name}.
         Zwróć JSON z 4 polami:
-        1. "relevance" (float 0.0 do 1.0): Jak bardzo dotyczy to spraw lokalnych?
+        1. "relevance" (float 0.0 do 1.0): Jak bardzo dotyczy to spraw lokalnych tego regionu?
         2. "sentiment" (float -1.0 do 1.0): Wydźwięk emocjonalny.
         3. "detected_region" (string lub null): Nazwa województwa (małą literą), jeśli news dotyczy konkretnego regionu Polski.
         - Wybierz z listy: {str(VALID_REGIONS)}.
@@ -187,6 +191,23 @@ def sync_logic():
                     except Exception:
                         print(f"[WARN] Nie udało się sparsować daty: '{raw_date_str}'")
 
+            latitude = None
+            longitude = None
+            if detected_location:
+                try:
+                    # Dodajemy ", Polska" aby zawęzić wyszukiwanie i timeout
+                    location = geolocator.geocode(f"{detected_location}, Polska", timeout=10)
+                    if location:
+                        latitude = location.latitude
+                        longitude = location.longitude
+                        print(f"Zgeolokalizowano '{detected_location}' na: {latitude}, {longitude}")
+                    else:
+                        print(f"Nie znaleziono koordynatów dla '{detected_location}, Polska'")
+                except (GeocoderTimedOut, GeocoderUnavailable) as e:
+                    print(f"Błąd usługi geolokalizacji dla '{detected_location}': {e}")
+                except Exception as e:
+                    print(f"Nieoczekiwany błąd geolokalizacji dla '{detected_location}': {e}")
+
             new_record = {
                 "title": entry.title,
                 "link": entry.link,
@@ -199,6 +220,8 @@ def sync_logic():
                 "temperature": temperature,
                 "local_relevance": relevance,
                 "location_name": detected_location,
+                "lat": latitude,
+                "lon": longitude,
             }
             
             try:
