@@ -100,6 +100,12 @@ export default function MapView({ onBack }) {
         }}
         zoomControl={false}
         attributionControl={false}
+        minZoom={6}
+        maxZoom={7}
+        maxBounds={[
+          [46, 12], // [południe, zachód]
+          [57, 25], // [północ, wschód]
+        ]}
       >
         {geo && (
           <GeoJSON
