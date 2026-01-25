@@ -86,14 +86,6 @@ export default function NewsCard({ item }) {
             useFlexGap
             sx={{ gap: 1 }}
           >
-            {item.sentiment_label && (
-              <Chip
-                label={item.sentiment_label}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
-            )}
             {item.region && (
               <Chip
                 icon={<LocationOnIcon />}
@@ -113,7 +105,7 @@ export default function NewsCard({ item }) {
               />
             )}
             <Chip
-              label={`Temp: ${item.temperature !== undefined ? Number(item.temperature*10).toFixed(2) : "-"}`}
+              label={`Temp: ${item.temperature !== undefined ? Number(item.temperature * 10).toFixed(2) : "-"}`}
               size="small"
               sx={{ bgcolor: tempColor, color: textColor, fontWeight: "bold" }}
             />

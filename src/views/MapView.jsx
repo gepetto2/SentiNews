@@ -123,7 +123,7 @@ export default function MapView() {
           zIndex: 1,
         }}
         zoomControl={false}
-        attributionControl={true}
+        attributionControl={false}
         minZoom={6}
         maxZoom={10}
         maxBounds={[

@@ -19,6 +19,7 @@ import {
   Checkbox,
   ListItemText,
   IconButton,
+  Slider,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -30,7 +31,7 @@ export default function NewsListView() {
   const [loading, setLoading] = useState(true);
 
   // Filtry
-  const [filterSentiment, setFilterSentiment] = useState([]);
+  const [filterTemperature, setFilterTemperature] = useState([-1, 1]);
   const [filterRegion, setFilterRegion] = useState("");
   const [filterCategory, setFilterCategory] = useState([]);
 
@@ -66,7 +67,13 @@ export default function NewsListView() {
   // Resetowanie strony przy zmianie filtrów
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterSentiment, filterRegion, filterCategory, sortConfig]);
+  }, [
+    searchQuery,
+    filterTemperature,
+    filterRegion,
+    filterCategory,
+    sortConfig,
+  ]);
 
   // Przetwarzanie danych (filtrowanie + sortowanie)
   const processedNews = useMemo(() => {
@@ -79,16 +86,18 @@ export default function NewsListView() {
         (item.summary &&
           item.summary.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      const matchesSentiment =
-        filterSentiment.length === 0 ||
-        filterSentiment.includes(item.sentiment_label);
+      const matchesTemperature =
+        item.temperature !== undefined &&
+        item.temperature >= filterTemperature[0] &&
+        item.temperature <= filterTemperature[1];
+
       const matchesRegion =
         !filterRegion || normalize(item.region) === normalize(filterRegion);
       const matchesCategory =
         filterCategory.length === 0 || filterCategory.includes(item.category);
 
       return (
-        matchesSearch && matchesSentiment && matchesRegion && matchesCategory
+        matchesSearch && matchesTemperature && matchesRegion && matchesCategory
       );
     });
 
@@ -122,7 +131,7 @@ export default function NewsListView() {
   }, [
     newsList,
     searchQuery,
-    filterSentiment,
+    filterTemperature,
     filterRegion,
     filterCategory,
     sortConfig,
@@ -136,9 +145,6 @@ export default function NewsListView() {
   );
 
   // Pobranie unikalnych wartości dla dropdownów
-  const sentiments = [
-    ...new Set(newsList.map((n) => n.sentiment_label).filter(Boolean)),
-  ];
   const regions = [...new Set(newsList.map((n) => n.region).filter(Boolean))]
     .filter((region) => region !== "Polska")
     .sort();
@@ -227,29 +233,26 @@ export default function NewsListView() {
               </Stack>
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Sentyment</InputLabel>
-                  <Select
-                    multiple
-                    value={filterSentiment}
-                    onChange={(e) =>
-                      setFilterSentiment(
-                        typeof e.target.value === "string"
-                          ? e.target.value.split(",")
-                          : e.target.value,
-                      )
-                    }
-                    input={<OutlinedInput label="Sentyment" />}
-                    renderValue={(selected) => selected.join(", ")}
+                <Box sx={{ width: "100%", px: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
                   >
-                    {sentiments.map((s) => (
-                      <MenuItem key={s} value={s}>
-                        <Checkbox checked={filterSentiment.indexOf(s) > -1} />
-                        <ListItemText primary={s} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                    Temperatura: {(filterTemperature[0] * 10).toFixed(0)} do{" "}
+                    {(filterTemperature[1] * 10).toFixed(0)}
+                  </Typography>
+                  <Slider
+                    size="small"
+                    value={filterTemperature}
+                    onChange={(e, newValue) => setFilterTemperature(newValue)}
+                    valueLabelDisplay="auto"
+                    min={-1}
+                    max={1}
+                    step={0.1}
+                    valueLabelFormat={(v) => (v * 10).toFixed(0)}
+                  />
+                </Box>
 
                 <FormControl fullWidth size="small">
                   <InputLabel>Region</InputLabel>
