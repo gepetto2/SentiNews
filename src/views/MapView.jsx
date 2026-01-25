@@ -107,7 +107,7 @@ export default function MapView() {
   return (
     <Box
       sx={{
-        height: "100vh",
+        height: ["100vh", "100dvh"],
         position: "relative",
         bgcolor: "#f3f4f6",
         overflow: "hidden",
@@ -272,7 +272,7 @@ export default function MapView() {
         elevation={3}
         sx={{
           position: "absolute",
-          bottom: 24,
+          bottom: { xs: 80, sm: 24 },
           right: 14,
           p: 1.5,
           zIndex: 1000,
