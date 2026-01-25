@@ -29,6 +29,14 @@ export default function NewsCardSmall({ news }) {
             {news.title}
           </Typography>
         </Link>
+        {news.domain && (
+          <Typography
+            variant="caption"
+            sx={{ color: textColor, opacity: 0.8, display: "block", mt: 0.5 }}
+          >
+            Źródło: {news.domain}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );

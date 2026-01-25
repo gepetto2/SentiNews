@@ -274,6 +274,7 @@ def read_map_data():
         if region_name in region_stats:
             temp = item.get('temperature', 0.0)
             weight = item.get('local_relevance')
+            domain = item.get('domain')
             if weight is None: weight = 1.0
             
             region_stats[region_name]["weighted_sum"] += (temp * weight)
@@ -283,7 +284,8 @@ def read_map_data():
                 "title": item.get("title"),
                 "link": item.get("link"),
                 "temperature": temp,
-                "relevance": weight
+                "relevance": weight,
+                "domain": domain
             })
 
     regional_data = {}

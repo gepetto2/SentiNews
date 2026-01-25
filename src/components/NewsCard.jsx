@@ -4,12 +4,14 @@ import {
   CardContent,
   Typography,
   Stack,
+  Box,
   Chip,
 } from "@mui/material";
 import chroma from "chroma-js";
 import { getColorForTemperature } from "../utils/colors";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
+import LanguageIcon from "@mui/icons-material/Language";
 
 export default function NewsCard({ item }) {
   const tempColor = getColorForTemperature(item.temperature);
@@ -33,8 +35,32 @@ export default function NewsCard({ item }) {
       }}
     >
       <CardActionArea href={item.link} target="_blank" rel="noopener">
-        <CardContent>
-          <Typography variant="h6" fontWeight={700} gutterBottom>
+        <CardContent sx={{ position: "relative" }}>
+          {item.domain && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                color: "text.secondary",
+                opacity: 0.8,
+              }}
+            >
+              <LanguageIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption" fontWeight={600}>
+                {item.domain}
+              </Typography>
+            </Box>
+          )}
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            gutterBottom
+            sx={{ pr: item.domain ? 12 : 0 }}
+          >
             {item.title}
           </Typography>
 
