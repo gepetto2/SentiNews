@@ -36,33 +36,37 @@ export default function NewsCard({ item }) {
     >
       <CardActionArea href={item.link} target="_blank" rel="noopener">
         <CardContent sx={{ position: "relative" }}>
-          {item.domain && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                color: "text.secondary",
-                opacity: 0.8,
-              }}
-            >
-              <LanguageIcon sx={{ fontSize: 14 }} />
-              <Typography variant="caption" fontWeight={600}>
-                {item.domain}
-              </Typography>
-            </Box>
-          )}
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            gutterBottom
-            sx={{ pr: item.domain ? 12 : 0 }}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 2,
+              mb: 1,
+            }}
           >
-            {item.title}
-          </Typography>
+            <Typography variant="h6" fontWeight={700} sx={{ flex: 1 }}>
+              {item.title}
+            </Typography>
+            {item.domain && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  color: "text.secondary",
+                  opacity: 0.8,
+                  whiteSpace: "nowrap",
+                  mt: 0.5,
+                }}
+              >
+                <LanguageIcon sx={{ fontSize: 14 }} />
+                <Typography variant="caption" fontWeight={600}>
+                  {item.domain}
+                </Typography>
+              </Box>
+            )}
+          </Box>
 
           <Typography
             variant="body2"

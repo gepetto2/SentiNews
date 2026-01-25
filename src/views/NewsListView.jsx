@@ -234,7 +234,7 @@ export default function NewsListView() {
               </Stack>
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <Box sx={{ width: "100%", px: 1 }}>
+                <Box sx={{ width: "100%" }}>
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -253,22 +253,33 @@ export default function NewsListView() {
                     step={0.1}
                     valueLabelFormat={(v) => (v * 10).toFixed(0)}
                     sx={{
+                      width: "calc(100% - 24px)",
+                      mx: "auto",
+                      display: "block",
                       height: 6,
-                      '& .MuiSlider-rail': {
+                      "& .MuiSlider-rail": {
                         background: `linear-gradient(90deg, ${getColorForTemperature(-1)} 0%, ${getColorForTemperature(0)} 50%, ${getColorForTemperature(1)} 100%)`,
                         opacity: 1,
                       },
-                      '& .MuiSlider-track': {
+                      "& .MuiSlider-track": {
                         border: "none",
                         backgroundColor: "rgba(0,0,0,0.1)", // Delikatne wyróżnienie wybranego zakresu
                       },
                       '& .MuiSlider-thumb[data-index="0"]': {
-                        backgroundColor: getColorForTemperature(filterTemperature[0]),
+                        backgroundColor: getColorForTemperature(
+                          filterTemperature[0],
+                        ),
                         border: "2px solid #fff",
+                        width: 15,
+                        height: 15,
                       },
                       '& .MuiSlider-thumb[data-index="1"]': {
-                        backgroundColor: getColorForTemperature(filterTemperature[1]),
+                        backgroundColor: getColorForTemperature(
+                          filterTemperature[1],
+                        ),
                         border: "2px solid #fff",
+                        width: 15,
+                        height: 15,
                       },
                     }}
                   />
