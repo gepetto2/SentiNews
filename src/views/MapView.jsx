@@ -267,6 +267,42 @@ export default function MapView() {
         </Paper>
       )}
 
+      {/* LEGENDA */}
+      <Paper
+        elevation={3}
+        sx={{
+          position: "absolute",
+          bottom: 24,
+          right: 14,
+          p: 1.5,
+          zIndex: 1000,
+          borderRadius: 3,
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
+        <Typography variant="caption" fontWeight={700} color="text.secondary">
+          Nastroje
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1.5, height: 150, py: 0.5 }}>
+          <Box
+            sx={{
+              width: 12,
+              height: "100%",
+              borderRadius: 1,
+              background: `linear-gradient(0deg, ${getColorForTemperature(-1)} 0%, ${getColorForTemperature(0)} 50%, ${getColorForTemperature(1)} 100%)`,
+            }}
+          />
+          <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <Typography variant="caption" fontWeight={600} color="text.secondary">10</Typography>
+            <Typography variant="caption" fontWeight={600} color="text.secondary">0</Typography>
+            <Typography variant="caption" fontWeight={600} color="text.secondary">-10</Typography>
+          </Box>
+        </Box>
+      </Paper>
+
       {/* MODAL POPUP */}
       <RegionModal
         selectedName={selectedName}

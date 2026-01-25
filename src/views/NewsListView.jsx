@@ -24,6 +24,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { getColorForTemperature } from "../utils/colors";
 import NewsCard from "../components/NewsCard";
 
 export default function NewsListView() {
@@ -251,6 +252,25 @@ export default function NewsListView() {
                     max={1}
                     step={0.1}
                     valueLabelFormat={(v) => (v * 10).toFixed(0)}
+                    sx={{
+                      height: 6,
+                      '& .MuiSlider-rail': {
+                        background: `linear-gradient(90deg, ${getColorForTemperature(-1)} 0%, ${getColorForTemperature(0)} 50%, ${getColorForTemperature(1)} 100%)`,
+                        opacity: 1,
+                      },
+                      '& .MuiSlider-track': {
+                        border: "none",
+                        backgroundColor: "rgba(0,0,0,0.1)", // Delikatne wyróżnienie wybranego zakresu
+                      },
+                      '& .MuiSlider-thumb[data-index="0"]': {
+                        backgroundColor: getColorForTemperature(filterTemperature[0]),
+                        border: "2px solid #fff",
+                      },
+                      '& .MuiSlider-thumb[data-index="1"]': {
+                        backgroundColor: getColorForTemperature(filterTemperature[1]),
+                        border: "2px solid #fff",
+                      },
+                    }}
                   />
                 </Box>
 
