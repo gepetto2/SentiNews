@@ -104,7 +104,7 @@ def analyze_with_gpt(text, region_name):
         return json.loads(response.choices[0].message.content)
     except Exception as e:
         print(f"Błąd analizy: {e}")
-        return {"relevance": 0.0, "sentiment": 0.0, "location": None, "detected_region": None, "category": "Ogólne"}
+        return {"relevance": 0.0, "sentiment": 0.0, "location": None, "detected_region": None, "category": "Inne"}
 
 def get_label_from_score(score):
     if score <= -0.5: return "very negative"
@@ -173,15 +173,15 @@ def sync_logic():
             label = get_label_from_score(temperature)
             detected_location = analysis.get("location")
             detected_region = analysis.get("detected_region")
-            detected_category = analysis.get("category", "Ogólne")
+            detected_category = analysis.get("category", "Inne")
 
             final_region = region
             if region == "Polska" and detected_region in VALID_REGIONS:
                 final_region = detected_region
             
-            feed_category = feed.get("category", "Ogólne")
+            feed_category = feed.get("category", "Inne")
             final_category = feed_category
-            if feed_category == "Ogólne":
+            if feed_category == "Inne":
                 final_category = detected_category
             
             # Parsowanie daty
