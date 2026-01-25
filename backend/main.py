@@ -40,7 +40,7 @@ VALID_REGIONS = [
     "wielkopolskie", "zachodniopomorskie"
 ]
 
-CATEGORIES = ["Polityka", "Ekonomia", "Społeczeństwo i Edukacja", "Kultura i Rozrywka", "Sport", "Nauka i Technologia", "Kryminalne i Prawo", "Ogólne"]
+CATEGORIES = ["Polityka", "Ekonomia", "Społeczeństwo i Edukacja", "Kultura i Rozrywka", "Sport", "Nauka i Technologia", "Kryminalne i Prawo"]
 
 HOURS_LIMIT = 48
 
@@ -70,7 +70,7 @@ def analyze_with_gpt(text, region_name):
         - Jeśli brak konkretnej lokalizacji -> null.
         3. "sentiment" (float -1.0 do 1.0): Wydźwięk emocjonalny.
         4. "category" (string): Kategoria newsa. Wybierz z listy: {str(CATEGORIES)}. 
-        - Jeśli nie pasuje do żadnej konkretnej, wybierz "Ogólne".
+        - Jeśli nie pasuje do żadnej konkretnej, wybierz "Inne".
 
         Przykład: {{ "detected_region": "małopolskie", "location": "Giewont", "sentiment": -0.5, "category": "Kultura i Rozrywka" }}
         """
@@ -86,7 +86,7 @@ def analyze_with_gpt(text, region_name):
         4. "location" (string lub null): Precyzyjna nazwa miejsca, tak, aby można było użyć na nim geolokalizacji (np. używając biblioteki geopy).
         - Jeśli brak konkretnej lokalizacji -> null.
         5. "category" (string): Kategoria newsa. Wybierz z listy: {str(CATEGORIES)}.
-        - Jeśli nie pasuje do żadnej konkretnej, wybierz "Ogólne".
+        - Jeśli nie pasuje do żadnej konkretnej, wybierz "Inne".
 
         Przykład: {{ "relevance": 0.9, "sentiment": -0.5, "detected_region": "małopolskie", "location": "Giewont", "category": "Kryminalne i Prawo" }}
         """
