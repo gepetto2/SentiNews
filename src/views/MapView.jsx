@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { MapContainer, GeoJSON, TileLayer } from "react-leaflet";
+import L from "leaflet";
+import chroma from "chroma-js";
+import {
+  MapContainer,
+  GeoJSON,
+  TileLayer,
+  CircleMarker,
+  Popup,
+} from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import {
   Box,
@@ -64,6 +73,30 @@ export default function MapView() {
     });
   };
 
+  const createClusterIcon = (cluster) => {
+    const markers = cluster.getAllChildMarkers();
+    let sumSentiment = 0;
+    let count = 0;
+
+    markers.forEach((marker) => {
+      const sentiment = marker.options.sentiment;
+      if (sentiment !== undefined && sentiment !== null) {
+        sumSentiment += sentiment;
+        count++;
+      }
+    });
+
+    const avgSentiment = count > 0 ? sumSentiment / count : 0;
+    const color = getColorForTemperature(avgSentiment);
+    const textColor = chroma(color).luminance() > 0.4 ? "#000" : "#fff";
+
+    return L.divIcon({
+      html: `<div style="background-color: ${color}; color: ${textColor}; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #444; box-shadow: 0 2px 6px rgba(0,0,0,0.3); font-size: 14px;">${cluster.getChildCount()}</div>`,
+      className: "custom-marker-cluster",
+      iconSize: L.point(36, 36),
+    });
+  };
+
   const selectedData = selectedName
     ? sentimentData[selectedName.toLowerCase()]
     : null;
@@ -92,7 +125,7 @@ export default function MapView() {
         zoomControl={false}
         attributionControl={true}
         minZoom={6}
-        maxZoom={8}
+        maxZoom={10}
         maxBounds={[
           [46, 12], // [południe, zachód]
           [57, 25], // [północ, wschód]
@@ -109,6 +142,65 @@ export default function MapView() {
             onEachFeature={onEachFeature}
           />
         )}
+
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={50}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          iconCreateFunction={createClusterIcon}
+        >
+          {Object.values(sentimentData).flatMap((region) =>
+            region.news
+              .filter((n) => n.lat !== null && n.lon !== null)
+              .map((news, idx) => (
+                <CircleMarker
+                  key={`${news.link}-${idx}`}
+                  center={[news.lat, news.lon]}
+                  sentiment={news.temperature}
+                  radius={8}
+                  pathOptions={{
+                    fillColor: getColorForTemperature(news.temperature),
+                    color: "#444",
+                    weight: 2,
+                    fillOpacity: 1,
+                  }}
+                >
+                  <Popup>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ mb: 0.5 }}
+                    >
+                      {news.domain} •{" "}
+                      {news.published
+                        ? new Date(news.published).toLocaleDateString("pl-PL", {
+                            day: "numeric",
+                            month: "short",
+                          })
+                        : "Brak daty"}
+                    </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={600}
+                      sx={{ mb: 1 }}
+                    >
+                      {news.title}
+                    </Typography>
+                    <Button
+                      href={news.link}
+                      target="_blank"
+                      size="small"
+                      sx={{ textTransform: "none", p: 0 }}
+                    >
+                      Czytaj więcej
+                    </Button>
+                  </Popup>
+                </CircleMarker>
+              )),
+          )}
+        </MarkerClusterGroup>
       </MapContainer>
 
       {/* TOP BAR */}

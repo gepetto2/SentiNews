@@ -67,7 +67,7 @@ export default function RegionModal({
               }}
             >
               <Typography variant="h5" fontWeight={700} component="span">
-                {(selectedTemp*10).toFixed(2)}
+                {(selectedTemp * 10).toFixed(2)}
               </Typography>
             </Box>
           ) : (
@@ -83,7 +83,9 @@ export default function RegionModal({
 
         <Box display="flex" flexDirection="column" gap={1}>
           {selectedNews && selectedNews.length > 0 ? (
-            selectedNews.map((news, i) => <NewsCardSmall key={i} news={news} />)
+            selectedNews
+              .slice(0, 5)
+              .map((news, i) => <NewsCardSmall key={i} news={news} />)
           ) : (
             <Typography variant="caption" color="text.secondary" align="center">
               Brak wyróżnionych newsów.

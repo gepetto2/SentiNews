@@ -40,7 +40,7 @@ VALID_REGIONS = [
     "wielkopolskie", "zachodniopomorskie"
 ]
 
-HOURS_LIMIT = 72
+HOURS_LIMIT = 48
 
 app = FastAPI()
 
@@ -274,7 +274,6 @@ def read_map_data():
         if region_name in region_stats:
             temp = item.get('temperature', 0.0)
             weight = item.get('local_relevance')
-            domain = item.get('domain')
             if weight is None: weight = 1.0
             
             region_stats[region_name]["weighted_sum"] += (temp * weight)
@@ -285,7 +284,10 @@ def read_map_data():
                 "link": item.get("link"),
                 "temperature": temp,
                 "relevance": weight,
-                "domain": domain
+                "domain": item.get("domain"),
+                "published": item.get('published'),
+                "lat": item.get('lat'),
+                "lon": item.get('lon'),
             })
 
     regional_data = {}
@@ -296,7 +298,7 @@ def read_map_data():
             avg = stats["weighted_sum"] / stats["total_weight"]
             avg = round(avg, 2)
             
-        top_news = sorted(stats["items"], key=lambda x: (x['relevance'], abs(x['temperature'] * x['relevance'])), reverse=True)[:5]
+        top_news = sorted(stats["items"], key=lambda x: (x['relevance'], abs(x['temperature'] * x['relevance'])), reverse=True)
 
         regional_data[region] = {
             "temperature": avg,
