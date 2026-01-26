@@ -107,6 +107,7 @@ def analyze_with_gpt(text, region_name):
         return {"relevance": 0.0, "sentiment": 0.0, "location": None, "detected_region": None, "category": "Inne"}
 
 def get_label_from_score(score):
+    if score is None: return "neutral"
     if score <= -0.5: return "very negative"
     if score < -0.1: return "negative"
     if score > 0.5: return "very positive"
