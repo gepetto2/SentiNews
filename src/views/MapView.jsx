@@ -127,8 +127,8 @@ export default function MapView() {
         minZoom={6}
         maxZoom={10}
         maxBounds={[
-          [46, 12], // [południe, zachód]
-          [57, 25], // [północ, wschód]
+          [46, 4], // [południe, zachód]
+          [57, 33], // [północ, wschód]
         ]}
       >
         <TileLayer
