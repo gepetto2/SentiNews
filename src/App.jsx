@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import "./App.css";
 import MapView from "./views/MapView.jsx";
 import NewsListView from "./views/NewsListView.jsx";
 import HomeView from "./views/HomeView.jsx";
