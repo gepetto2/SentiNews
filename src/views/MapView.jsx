@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import L from "leaflet";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "@maplibre/maplibre-gl-leaflet";
 import chroma from "chroma-js";
 import {
   MapContainer,
   GeoJSON,
-  TileLayer,
   CircleMarker,
   Popup,
+  Pane,
 } from "react-leaflet";
+import { createLayerComponent } from "@react-leaflet/core";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import {
@@ -23,6 +26,17 @@ import InfoIcon from "@mui/icons-material/Info";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RegionModal from "../components/RegionModal";
 import { getColorForTemperature } from "../utils/colors";
+
+const VectorTileLayer = createLayerComponent((props, context) => {
+  const instance = L.maplibreGL({
+    style: props.url,
+    attribution: props.attribution,
+    pane: props.pane || "tilePane",
+  });
+  return { instance, context };
+});
+
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
 
 export default function MapView() {
   const [geo, setGeo] = useState(null);
@@ -55,7 +69,7 @@ export default function MapView() {
       fillColor,
       weight: isSelected ? 3 : 1,
       color: isSelected ? "#666" : "white",
-      fillOpacity: 0.9,
+      fillOpacity: 1,
     };
   };
 
@@ -131,9 +145,9 @@ export default function MapView() {
           [57, 33], // [północ, wschód]
         ]}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+        <VectorTileLayer
+          attribution='&copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a>'
+          url={`https://api.maptiler.com/maps/019c0cbe-faa0-7d23-af0b-548412706113/style.json?key=${MAPTILER_KEY}`}
         />
         {geo && (
           <GeoJSON
@@ -201,6 +215,15 @@ export default function MapView() {
               )),
           )}
         </MarkerClusterGroup>
+
+        {/* Pane z etykietami na samym końcu, aby był nad klastrami */}
+        <Pane name="labels" style={{ zIndex: 650, pointerEvents: "none" }}>
+          <VectorTileLayer
+            attribution='&copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a>'
+            url={`https://api.maptiler.com/maps/019c0ca7-f81a-7be8-8124-aa9e56706bc7/style.json?key=${MAPTILER_KEY}`}
+            pane="labels"
+          />
+        </Pane>
       </MapContainer>
 
       {/* TOP BAR */}
@@ -295,10 +318,34 @@ export default function MapView() {
               background: `linear-gradient(0deg, ${getColorForTemperature(-1)} 0%, ${getColorForTemperature(0)} 50%, ${getColorForTemperature(1)} 100%)`,
             }}
           />
-          <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary">10</Typography>
-            <Typography variant="caption" fontWeight={600} color="text.secondary">0</Typography>
-            <Typography variant="caption" fontWeight={600} color="text.secondary">-10</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              variant="caption"
+              fontWeight={600}
+              color="text.secondary"
+            >
+              10
+            </Typography>
+            <Typography
+              variant="caption"
+              fontWeight={600}
+              color="text.secondary"
+            >
+              0
+            </Typography>
+            <Typography
+              variant="caption"
+              fontWeight={600}
+              color="text.secondary"
+            >
+              -10
+            </Typography>
           </Box>
         </Box>
       </Paper>
