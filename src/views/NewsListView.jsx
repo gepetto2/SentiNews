@@ -52,7 +52,7 @@ export default function NewsListView() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("NEWS_LIST_URL");
+        const res = await fetch(NEWS_LIST_URL);
         const data = await res.json();
         setNewsList(data);
       } catch (e) {
