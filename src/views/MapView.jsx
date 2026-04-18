@@ -37,6 +37,7 @@ const VectorTileLayer = createLayerComponent((props, context) => {
 });
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
+const MAP_DATA_URL = import.meta.env.VITE_MAP_DATA_URL;
 
 export default function MapView() {
   const [geo, setGeo] = useState(null);
@@ -52,7 +53,7 @@ export default function MapView() {
   }, []);
 
   useEffect(() => {
-    fetch("https://sentinews.onrender.com/map-data")
+    fetch(MAP_DATA_URL)
       .then((res) => res.json())
       .then((data) => setSentimentData(data))
       .catch((e) => console.error("API fetch error:", e));

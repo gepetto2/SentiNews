@@ -27,6 +27,8 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { getColorForTemperature } from "../utils/colors";
 import NewsCard from "../components/NewsCard";
 
+const NEWS_LIST_URL = import.meta.env.VITE_NEWS_LIST_URL;
+
 export default function NewsListView() {
   const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function NewsListView() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("https://sentinews.onrender.com/rss");
+        const res = await fetch("NEWS_LIST_URL");
         const data = await res.json();
         setNewsList(data);
       } catch (e) {
