@@ -1,0 +1,35 @@
+name: Sync News Hourly
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Wywołanie w 0 minucie każdej godziny (co godzinę)
+  workflow_dispatch: # Opcja pozwalająca na ręczne uruchomienie z poziomu interfejsu GitHub
+
+jobs:
+  run-sync-logic:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # Możesz dostosować wersję Pythona, której używasz lokalnie
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          # Jeżeli nie masz pliku requirements.txt, użyj polecenia poniżej (odkomentuj je i usuń powyższe):
+          # pip install fastapi uvicorn supabase openai feedparser python-dotenv geopy python-dateutil
+
+      - name: Run sync_logic
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          cd backend
+          python run_sync.py
